@@ -75,7 +75,7 @@ def upload_videos(accounts, file_path, title, tags):
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
-            headless=False, executable_path=os.getenv('CHROME_DRIVER')
+            headless=os.getenv('HEADLESS'), executable_path=os.getenv('CHROME_DRIVER')
         )
         for account in accounts:
             try:

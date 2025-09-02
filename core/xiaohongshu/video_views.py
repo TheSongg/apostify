@@ -38,101 +38,6 @@ class VideoViewSet(BaseViewSet):
         page.keyboard.press("Enter")
         time.sleep(1)
 
-    # @action(detail=False, methods=['post'], url_path='upload')
-    # def upload(self, request, *args, **kwargs):
-    #     title = request.data.get("title", "")
-    #     tags = request.data.get("tags", [])
-    #     publish_date = request.data.get("publish_date")
-    #     file_path = request.data.get("file_path")
-    #     if not file_path:
-    #         raise Exception('视频路径不能为空！')
-    #
-    #     instances = Account.objects.filter(platform_type=self.platform_type, is_available=True).all()
-    #     error_info = []
-    #     with sync_playwright() as playwright:
-    #         browser = playwright.chromium.launch(headless=False, executable_path=os.getenv('CHROME_DRIVER'))
-    #         for instance in instances:
-    #             try:
-    #                 context = browser.new_context(
-    #                     storage_state=instance.cookie
-    #                 )
-    #                 context = set_init_script(context)
-    #                 page = context.new_page()
-    #                 page.goto(os.getenv('XHS_VIDEO_PAGE'))
-    #                 page.wait_for_url(os.getenv('XHS_VIDEO_PAGE'))
-    #
-    #                 # 上传视频
-    #                 page.locator("div[class^='upload-content'] input[class='upload-input']").set_input_files(file_path)
-    #
-    #                 # 等待上传完成
-    #                 while True:
-    #                     try:
-    #                         upload_input = page.wait_for_selector('input.upload-input', timeout=3000)
-    #                         preview_new = upload_input.query_selector(
-    #                             'xpath=following-sibling::div[contains(@class, "preview-new")]')
-    #                         if preview_new:
-    #                             stage_elements = preview_new.query_selector_all('div.stage')
-    #                             upload_success = False
-    #                             for stage in stage_elements:
-    #                                 text_content = page.evaluate('(element) => element.textContent', stage)
-    #                                 if '上传成功' in text_content:
-    #                                     upload_success = True
-    #                                     break
-    #                             if upload_success:
-    #                                 break
-    #                         else:
-    #                             time.sleep(1)
-    #                     except:
-    #                         time.sleep(0.5)
-    #
-    #                 # 填充标题
-    #                 time.sleep(1)
-    #                 title_container = page.locator('div.plugin.title-container').locator('input.d-text')
-    #                 if title_container.count():
-    #                     title_container.fill(title[:30])
-    #                 else:
-    #                     titlecontainer = page.locator(".notranslate")
-    #                     titlecontainer.click()
-    #                     page.keyboard.press("Backspace")
-    #                     page.keyboard.press("Control+KeyA")
-    #                     page.keyboard.press("Delete")
-    #                     page.keyboard.type(title)
-    #                     page.keyboard.press("Enter")
-    #
-    #                 # 填充话题
-    #                 css_selector = ".ql-editor"
-    #                 for tag in tags:
-    #                     page.type(css_selector, "#" + tag)
-    #                     page.press(css_selector, "Space")
-    #
-    #                 # 设置定时/发布
-    #                 if publish_date:
-    #                     self.set_schedule_time(page, publish_date)
-    #
-    #                 while True:
-    #                     try:
-    #                         if publish_date:
-    #                             page.locator('button:has-text("定时发布")').click()
-    #                         else:
-    #                             page.locator('button:has-text("发布")').click()
-    #                         page.wait_for_url(os.getenv("XHS_VIDEO_SCHEDULED_RELEASE_PAGE"), timeout=3000)
-    #                         break
-    #                     except:
-    #                         page.screenshot(full_page=True)
-    #                         time.sleep(0.5)
-    #
-    #                 time.sleep(2)
-    #                 context.close()
-    #             except Exception as e:
-    #                 error_info.append(f'账号 {instance.nickname} 上传失败， 错误：{str(e)}')
-    #
-    #         browser.close()
-    #     res ={
-    #         'status': '部分失败' if error_info else '全部成功',
-    #         'error_info': error_info
-    #     }
-    #     return Response(res)
-
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request, *args, **kwargs):
         title = request.data.get("title", "")
@@ -171,7 +76,7 @@ class VideoViewSet(BaseViewSet):
         """启动浏览器并初始化上下文"""
         browser = playwright.chromium.launch(
             executable_path=os.getenv('CHROME_DRIVER'),
-            headless=False
+            headless=os.getenv('HEADLESS')
         )
         context = browser.new_context()
         context = set_init_script(context)
