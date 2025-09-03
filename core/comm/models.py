@@ -30,6 +30,6 @@ class Account(models.Model):
 
 
 class Videos(models.Model):
-    name = models.CharField(max_length=100, null=False, blank=False)
+    name = models.CharField(max_length=100, null=True, blank=True)
     upload_time = models.DateTimeField(auto_now_add=True)
-    uploaded_platform = models.JSONField(default=list, encoder=DjangoJSONEncoder)
+    account = models.ManyToManyField(Account, blank=True, related_name='videos')

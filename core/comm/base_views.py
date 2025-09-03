@@ -1,13 +1,15 @@
 from rest_framework import viewsets
 import os
-import json
-import time
+import pytz
+from .serializers import VideosSerializer
+from django.db import transaction
 import logging
 from rest_framework.response import Response
 from django.http import HttpResponse, StreamingHttpResponse
-from .comm import json_rsp, json_err_rsp
+from utils.comm import json_rsp, json_err_rsp
 import traceback
 from django.conf import settings
+from rest_framework.decorators import action
 
 
 logger = logging.getLogger("app")
@@ -25,7 +27,6 @@ class BaseViewSet(viewsets.ModelViewSet):
             instance = serializer.save()
             return instance
         except Exception as e:
-            logger.error(traceback.format_exc())
             logger.error(traceback.format_exc())
             raise Exception(f"数据异常！{e}")
 
@@ -74,3 +75,37 @@ class BaseViewSet(viewsets.ModelViewSet):
 
         self.response = self.finalize_response(request, response, *args, **kwargs)
         return self.response
+
+    @action(methods=['post'], detail=False)
+    def save_videos(self, request, *args, **kwargs):
+        video_file = request.FILES.get("video")
+        if not video_file:
+            return Response(
+                {"status": "error", "message": "接口中没有待保存的视频文件！"},
+            )
+
+        try:
+            with transaction.atomic():
+                instance = self.db_save(VideosSerializer, {})
+
+                now = instance.upload_time.astimezone(pytz.timezone(settings.TIME_ZONE))
+                now_str = now.strftime("%Y%m%d%H%M%S")
+                month_dir_str = now.strftime("%Y-%m")
+
+                ext = os.path.splitext(video_file.name)[1] or ".mp4"
+                video_name = f"{os.path.splitext(video_file.name)[0]}_{now_str}{ext}"
+                save_dir_path = os.path.join(settings.BASE_DIR, "videos", month_dir_str)
+                os.makedirs(save_dir_path, exist_ok=True)
+                save_path = os.path.join(save_dir_path, video_name)
+
+                # 保存文件
+                with open(save_path, "wb+") as destination:
+                    for chunk in video_file.chunks():
+                        destination.write(chunk)
+
+                self.db_save(VideosSerializer, {'name': video_name}, instance)
+        except Exception as e:
+            transaction.set_rollback(True)
+            raise Exception(f"保存视频失败，错误：{str(e)}")
+
+        return Response({"status": "success", "video_name": video_name})

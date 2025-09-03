@@ -5,6 +5,8 @@ import os
 from playwright.sync_api import sync_playwright
 from core.comm import send_message
 import logging
+from django.db import transaction
+from core.comm.models import Videos
 
 
 logger = logging.getLogger(__name__)
@@ -70,8 +72,8 @@ def _fill_tags(page, tags):
 
 
 @shared_task
-def upload_videos(accounts, file_path, title, tags):
-    error_info = []
+def upload_videos(accounts, file_path, title, tags, video_name):
+    error_info, uploaded_account = [], []
 
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(
@@ -80,6 +82,7 @@ def upload_videos(accounts, file_path, title, tags):
         for account in accounts:
             try:
                 _upload_for_account(browser, account, file_path, title, tags)
+                uploaded_account.append(account)
             except Exception as e:
                 logger.error(f'账号 {account.nickname} 上传失败， 错误：{str(e)}')
                 error_info.append(f'账号 {account.nickname} 上传失败， 错误：{str(e)}')
@@ -88,3 +91,11 @@ def upload_videos(accounts, file_path, title, tags):
         send_message.send_message_to_all_bot(f'{";".join(error_info)}')
     else:
         send_message.send_message_to_all_bot('所有小红书账号上传成功！')
+    associated_account_and_video(uploaded_account, video_name)
+
+
+def associated_account_and_video(uploaded_account, video_name):
+    if uploaded_account:
+        with transaction.atomic():
+            video_instance = Videos.objects.select_for_update().get(name=video_name)
+            video_instance.account.set(uploaded_account)

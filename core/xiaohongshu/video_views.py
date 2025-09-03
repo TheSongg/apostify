@@ -1,7 +1,7 @@
 import logging
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from utils.base_views import BaseViewSet
+from core.comm.base_views import BaseViewSet
 from utils.comm import set_init_script
 from core.comm.models import Videos, Account
 from core.comm.serializers import VideosSerializer
@@ -14,6 +14,7 @@ from django.conf import settings
 from datetime import datetime
 from core.comm import send_message
 from .task import upload_videos
+import pytz
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -42,13 +43,21 @@ class VideoViewSet(BaseViewSet):
     def upload(self, request, *args, **kwargs):
         title = request.data.get("title", "")
         tags = request.data.get("tags", [])
-        file_path = request.data.get("file_path")
+        video_name = request.data.get("video_name")
+        if not video_name:
+            raise Exception('视频名称不能为空！')
 
-        if not file_path:
-            raise Exception('视频路径不能为空！')
+        instance = self.queryset.filter(name=video_name).first()
+        if not instance:
+            raise Exception(f'视频{video_name}不存在！')
+
+        month_dir_str = instance.upload_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m")
+        file_path = os.path.join(settings.BASE_DIR, "videos", month_dir_str, video_name)
 
         accounts = Account.objects.filter(platform_type=self.platform_type, is_available=True)
-        upload_videos.delay(accounts, file_path, title, tags)
+        if not accounts:
+            raise Exception('没有可用的小红书账号，请先添加账号并生成Cookie！')
+        upload_videos.delay(accounts, file_path, title, tags, video_name)
         return Response('后台上传中，稍后请注意查看上传结果！')
 
 
