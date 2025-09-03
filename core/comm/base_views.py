@@ -109,3 +109,8 @@ class BaseViewSet(viewsets.ModelViewSet):
             raise Exception(f"保存视频失败，错误：{str(e)}")
 
         return Response({"status": "success", "video_name": video_name})
+
+    @action(detail=False, methods=['get'])
+    def test(self, request, *args, **kwargs):
+        print(request.data)
+        return Response({'status':'success'})
