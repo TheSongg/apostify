@@ -106,10 +106,6 @@ class CookieViewSet(BaseViewSet):
 
             # 异步等待
             await asyncio.sleep(interval)
-
-            # 异步发送提示信息
-            await asyncio.to_thread(lambda: send_message.send_message_to_telegram('请尽快扫码登录小红书！'))
-
             num += interval
 
         logger.error("登录超时，二维码未被扫描！")
