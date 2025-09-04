@@ -36,7 +36,7 @@ class CookieViewSet(BaseViewSet):
 
             # 如果使用 Telegram 机器人发送图片（同步函数用 asyncio.to_thread）
             if os.getenv('USE_TELEGRAM_BOT') in ['True', True]:
-                await asyncio.to_thread(lambda: send_message.send_img_to_telegram(qr_img_path))
+                await asyncio.to_thread(lambda: send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！'))
 
             # 异步等待扫码登录
             await self._wait_for_login(page)
