@@ -1,47 +1,52 @@
-import requests
 import os
 import sys
 import logging
+import asyncio
+from telegram import Bot
 
 
 logger = logging.getLogger(__name__)
 
 
-def send_img_to_telegram(img_path, msg=''):
-    """通过 Telegram Bot 发送图片"""
-    url = f"https://api.telegram.org/bot{os.getenv('TG_BOT_TOKEN')}/sendPhoto"
+
+async def send_img_to_telegram(img_path, msg=''):
+    """异步通过 telegram 库发送图片"""
+    bot = Bot(token=os.getenv("TG_BOT_TOKEN"))
+    chat_id = os.getenv("CHAT_ID")
     with open(img_path, "rb") as f:
-        files = {"photo": f}
-        data = {"chat_id": os.getenv('CHAT_ID'), "caption": msg}
-        resp = requests.post(url, files=files, data=data)
-    if not resp.ok:
-        raise Exception('发送图片到 tg bot 失败！')
+        await bot.send_photo(chat_id=chat_id, photo=f, caption=msg)
 
 
-def send_message_to_telegram(text):
-    """通过 Telegram Bot 发送文字"""
-    url = f"https://api.telegram.org/bot{os.getenv('TG_BOT_TOKEN')}/sendMessage"
-    data = {
-        "chat_id": os.getenv('CHAT_ID'),
-        "text": text,
-        "parse_mode": "Markdown"
-    }
-    resp = requests.post(url, data=data)
-    if not resp.ok:
-        raise Exception('发送图片到 tg bot 失败！')
+async def send_message_to_telegram(text):
+    """异步通过 Telegram Bot 发送文字"""
+    bot = Bot(token=os.getenv("TG_BOT_TOKEN"))
+    chat_id = os.getenv("CHAT_ID")
+    await bot.send_message(
+        chat_id=chat_id,
+        text=text,
+        parse_mode="Markdown"
+    )
 
 
+async def send_message_to_all_bot(text: str):
+    """异步发送消息到所有机器人"""
+    tasks = []
+    module = sys.modules[__name__]
 
-def send_message_to_all_bot(text):
-    """发送消息到所有机器人"""
     for bot in BOT_LIST:
         bot_name = bot.split('_')[1].lower()
         try:
-            module = sys.modules[__name__]
             func = getattr(module, f"send_message_to_{bot_name}")
-            func(text)
+            tasks.append(func(text))
         except Exception as e:
-            logger.error(f'发送消息到机器人{bot_name}异常， 错误：{str(e)}')
+            logger.error(f'发送消息到机器人 {bot_name} 异常，错误：{str(e)}')
+
+    if tasks:
+        # 并发执行所有任务
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for bot, result in zip(BOT_LIST, results):
+            if isinstance(result, Exception):
+                logger.error(f"{bot} 发送失败: {result}")
 
 
 BOT_LIST = [k for k, v in os.environ.items() if k.startswith("USE_") and k.endswith("_BOT") and v in [True, 'True']]

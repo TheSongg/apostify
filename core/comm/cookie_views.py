@@ -31,32 +31,33 @@ class CookieViewSet(BaseViewSet):
 
     async def _async_generate_xhs_cookie(self):
         async with async_playwright() as playwright:
-            # 异步初始化浏览器
+            # 初始化浏览器
             browser, context, page = await self._init_browser(playwright)
 
-            # 异步生成二维码
+            # 生成二维码
             qr_img_path = await self._generate_and_send_qr(page)
 
-            # 如果使用 Telegram 机器人发送图片（同步函数用 asyncio.to_thread）
+            # 使用 Telegram 机器人发送图片
             if os.getenv('USE_TELEGRAM_BOT') in ['True', True]:
-                await asyncio.to_thread(lambda: send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！'))
+                await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
 
-            # 异步等待扫码登录
+            # 等待扫码登录
             await self._wait_for_login(page)
 
-            # 异步保存 cookie
+            # 保存 cookie
             await self._save_cookie(context)
 
             await browser.close()
             logger.info("登录二维码保存成功！")
+            await asyncio.to_thread(os.remove, qr_img_path)
 
     @staticmethod
     async def _init_browser(playwright):
         """异步启动浏览器并初始化上下文"""
-        # 异步获取浏览器实例
+        # 获取浏览器实例
         browser = await get_chrome_driver(playwright)
 
-        # 创建新上下文（异步）
+        # 创建新上下文
         context = await browser.new_context()
         context = await set_init_script(context)
 
@@ -72,7 +73,7 @@ class CookieViewSet(BaseViewSet):
 
     @staticmethod
     async def _generate_and_send_qr(page):
-        """异步点击登录并发送二维码到 Telegram"""
+        """点击登录并发送二维码到 Telegram"""
         # 点击登录按钮
         await page.locator("img.css-wemwzq").click()
 
@@ -86,7 +87,7 @@ class CookieViewSet(BaseViewSet):
             logger.error("未找到登录二维码！")
             raise Exception("未找到登录二维码！")
 
-        # 保存二维码图片（文件写入可用 asyncio.to_thread 避免阻塞）
+        # 保存二维码图片
         _, b64data = src.split(",", 1)
         img_bytes = base64.b64decode(b64data)
         save_time = datetime.now().strftime("%Y%m%d%H%M%S")
@@ -99,15 +100,14 @@ class CookieViewSet(BaseViewSet):
 
     @staticmethod
     async def _wait_for_login(page, max_wait=60, interval=3):
-        """异步轮询等待用户扫码登录"""
+        """轮询等待用户扫码登录"""
         num = 0
         while num < max_wait:
-            # 异步查询元素
+            # 查询元素
             login_success = await page.query_selector("span:has-text('发布笔记')")
             if login_success:
                 return
 
-            # 异步等待
             await asyncio.sleep(interval)
             num += interval
 
@@ -115,8 +115,7 @@ class CookieViewSet(BaseViewSet):
         raise Exception("登录超时，二维码未被扫描！")
 
     async def _save_cookie(self, context):
-        """异步保存 cookie 到数据库"""
-        # 异步获取浏览器上下文的存储状态
+        """异存 cookie 到数据库"""
         cookie = await context.storage_state()
         user_info = self.query_user_info(cookie)
         expiration_time = self.query_expiration_time(cookie)

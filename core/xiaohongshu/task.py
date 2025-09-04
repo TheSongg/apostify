@@ -121,9 +121,9 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
     # 发送通知
     if error_info:
-        await asyncio.to_thread(lambda: send_message.send_message_to_all_bot(f'{";".join(error_info)}'))
+        await send_message.send_message_to_all_bot(f'{";".join(error_info)}')
     else:
-        await asyncio.to_thread(lambda: send_message.send_message_to_all_bot('所有小红书账号上传成功！'))
+        await send_message.send_message_to_all_bot('所有小红书账号上传成功！')
 
     # 更新数据库，仍然同步
     await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
