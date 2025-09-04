@@ -2,6 +2,7 @@ from django.http import JsonResponse
 from rest_framework import status
 from django.conf import settings
 from pathlib import Path
+import os
 
 
 def field_en_to_zh(instance, data):
@@ -54,7 +55,19 @@ def json_err_rsp(exception, http_status=status.HTTP_200_OK):
     response["Access-Control-Allow-Headers"] = "*"
     return response
 
-def set_init_script(context):
-    stealth_js_path = Path(settings.BASE_DIR / "core" / "utils/stealth.min.js")
-    context.add_init_script(path=stealth_js_path)
+async def set_init_script(context):
+    stealth_js_path = Path(settings.BASE_DIR) / "core" / "utils" / "stealth.min.js"
+    await context.add_init_script(path=str(stealth_js_path))
     return context
+
+async def get_chrome_driver(playwright):
+    chrome_driver = os.getenv('CHROME_DRIVER')
+
+    if chrome_driver.startswith('ws://'):
+        # 连接已经运行的 Playwright Server
+        return await playwright.chromium.connect_over_ws(chrome_driver)
+        # 本地启动浏览器
+    return await playwright.chromium.launch(
+        headless=True if os.getenv('HEADLESS') in ['True', True] else False,
+        executable_path=chrome_driver
+    )

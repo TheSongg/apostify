@@ -38,6 +38,8 @@ class VideoViewSet(BaseViewSet):
         title = request.data.get("title", "")
         tags = request.data.get("tags", [])
         video_name = request.data.get("video_name")
+        nickname = request.data.get("nickname")
+
         if not video_name:
             raise Exception('视频名称不能为空！')
 
@@ -45,11 +47,18 @@ class VideoViewSet(BaseViewSet):
         if not instance:
             raise Exception(f'视频{video_name}不存在！')
 
-        month_dir_str = instance.upload_time.astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m")
+        account = Account.objects.filter(
+            platform_type=self.platform_type,
+            is_available=True,
+            nickname=nickname
+        )
+        if not account.exists():
+            raise Exception('该小红书账号不可用，请先添加账号并生成Cookie！')
+
+        month_dir_str = instance.upload_time.astimezone(
+            pytz.timezone(settings.TIME_ZONE)
+        ).strftime("%Y-%m")
         file_path = os.path.join(settings.BASE_DIR, "videos", month_dir_str, video_name)
 
-        accounts = Account.objects.filter(platform_type=self.platform_type, is_available=True)
-        if not accounts:
-            raise Exception('没有可用的小红书账号，请先添加账号并生成Cookie！')
-        upload_videos.delay(accounts, file_path, title, tags, video_name)
+        upload_videos.delay(nickname, self.platform_type, file_path, title, tags, video_name)
         return Response('后台上传中，稍后请注意查看上传结果！')
