@@ -9,10 +9,13 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
 from .models import Account
+from .serializers import AccountSerializer
 import asyncio
 from playwright.async_api import async_playwright
 from utils.comm import get_chrome_driver
 from django.conf import settings
+from asgiref.sync import sync_to_async
+import json
 
 
 logger = logging.getLogger(__name__)
@@ -111,21 +114,59 @@ class CookieViewSet(BaseViewSet):
         logger.error("登录超时，二维码未被扫描！")
         raise Exception("登录超时，二维码未被扫描！")
 
-    @staticmethod
-    async def _save_cookie(context):
+    async def _save_cookie(self, context):
         """异步保存 cookie 到数据库"""
         # 异步获取浏览器上下文的存储状态
         cookie = await context.storage_state()
-
+        user_info = self.query_user_info(cookie)
+        expiration_time = self.query_expiration_time(cookie)
         data = {
             "platform_type": 1,
-            "account_id": cookie.get('account_id', ''),
-            "nickname": cookie.get('nickname', ''),
-            "password": cookie.get('password', ''),
-            "phone": cookie.get('phone', ''),
-            "email": cookie.get('email', ''),
+            "account_id": user_info.get('redId', ''),
+            "nickname": user_info.get('userName', ''),
+            "password": user_info.get('password', ''),
+            "phone": user_info.get('phone', ''),
+            "email": user_info.get('email', ''),
             "cookie": cookie,
-            "expiration_time": cookie.get('expiration_time', 0)
+            "expiration_time": expiration_time
         }
 
-        await asyncio.to_thread(lambda: Account.objects.create(**data))
+        await self.update_account(data)
+
+    @sync_to_async
+    def update_account(self, data):
+        instance = Account.objects.filter(account_id=data.get('account_id', '')).first()
+        if instance:
+            self.db_save(AccountSerializer, data, instance)
+        else:
+            self.db_save(AccountSerializer, data)
+
+    @staticmethod
+    def query_user_info(cookie):
+        try:
+            local_storage = cookie['origins'][0].get('localStorage', [])
+            user_info = None
+            for item in local_storage:
+                if item.get('name') == 'USER_INFO_FOR_BIZ':
+                    user_info = item.get('value')
+                    break
+            if user_info is None:
+                raise Exception('不存在USER_INFO_FOR_BIZ字段！')
+
+            if isinstance(user_info, str):
+                user_info = json.loads(user_info)
+            return user_info
+        except Exception as e:
+            raise Exception(f'查询user_info异常，错误：{str(e)}')
+
+    @staticmethod
+    def query_expiration_time(cookie):
+        expiration_time_list = []
+        try:
+            cookies = cookie['cookies']
+            for item in cookies:
+                if item.get('expires'):
+                    expiration_time_list.append(item.get('expires'))
+            return min(expiration_time_list)
+        except Exception as e:
+            raise Exception(f'查询expiration_time异常，错误：{str(e)}')
