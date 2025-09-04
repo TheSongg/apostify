@@ -11,6 +11,11 @@ class AccountSerializer(serializers.ModelSerializer):
         model = Account
         fields = "__all__"
 
+    def get_fields(self):
+        fields = super(AccountSerializer, self).get_fields()
+        if self.context["request"].method in ["list"]:
+            fields = ['platform_type', 'nickname', 'expiration_time']
+        return fields
 
 class VideosSerializer(serializers.ModelSerializer):
     upload_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)

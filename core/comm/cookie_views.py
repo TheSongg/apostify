@@ -166,6 +166,6 @@ class CookieViewSet(BaseViewSet):
             for item in cookies:
                 if item.get('expires'):
                     expiration_time_list.append(item.get('expires'))
-            return min(expiration_time_list)
+            return int(min(expiration_time_list))
         except Exception as e:
             raise Exception(f'查询expiration_time异常，错误：{str(e)}')
