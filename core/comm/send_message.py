@@ -7,12 +7,12 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def send_img_to_telegram(img_path):
+def send_img_to_telegram(img_path, msg):
     """通过 Telegram Bot 发送图片"""
     url = f"https://api.telegram.org/bot{os.getenv('TG_BOT_TOKEN')}/sendPhoto"
     with open(img_path, "rb") as f:
         files = {"photo": f}
-        data = {"chat_id": os.getenv('CHAT_ID'), "caption": ""}
+        data = {"chat_id": os.getenv('CHAT_ID'), "caption": msg}
         resp = requests.post(url, files=files, data=data)
     if not resp.ok:
         raise Exception('发送图片到 tg bot 失败！')
