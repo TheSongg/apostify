@@ -66,7 +66,7 @@ async def get_chrome_driver(playwright):
     if chrome_driver.startswith('ws://') or \
         chrome_driver.startswith('http://'):
         # 连接已经运行的 Playwright Server
-        return await playwright.chromium.connect_over_cdp(chrome_driver)
+        return await playwright.chromium.connect(chrome_driver)
         # 本地启动浏览器
     return await playwright.chromium.launch(
         headless=True if os.getenv('HEADLESS') in ['True', True] else False,
