@@ -56,7 +56,7 @@ def json_err_rsp(exception, http_status=status.HTTP_200_OK):
     return response
 
 async def set_init_script(context):
-    stealth_js_path = Path(settings.BASE_DIR) / "core" / "utils" / "stealth.min.js"
+    stealth_js_path = Path(settings.BASE_DIR) / "utils" / "stealth.min.js"
     await context.add_init_script(path=str(stealth_js_path))
     return context
 
