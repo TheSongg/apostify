@@ -12,6 +12,7 @@ from .models import Account
 import asyncio
 from playwright.async_api import async_playwright
 from utils.comm import get_chrome_driver
+from django.conf import settings
 
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,8 @@ class CookieViewSet(BaseViewSet):
 
         # 创建新页面
         page = await context.new_page()
+        page.set_default_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+        page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
 
         # 打开主页
         await page.goto(os.getenv('XHS_HOME'))

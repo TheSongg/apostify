@@ -18,6 +18,9 @@ async def _upload_for_account(browser, account, file_path, title, tags):
     context = await browser.new_context(storage_state=account.cookie)
     context = await set_init_script(context)
     page = await context.new_page()
+    page.set_default_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+    page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+
     await page.goto(os.getenv('XHS_VIDEO_PAGE'))
     await page.wait_for_url(os.getenv('XHS_VIDEO_PAGE'))
 
