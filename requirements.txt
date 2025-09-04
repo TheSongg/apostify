@@ -23,7 +23,7 @@ greenlet==3.2.4
 idna==3.10
 kombu==5.5.4
 packaging==25.0
-playwright==1.54.0
+playwright==1.55.0
 prompt-toolkit==3.0.52
 psycopg2-binary==2.9.10
 pyee==13.0.0
