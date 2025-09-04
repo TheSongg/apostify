@@ -41,7 +41,7 @@ class CookieViewSet(BaseViewSet):
         """启动浏览器并初始化上下文"""
         browser = playwright.chromium.launch(
             executable_path=os.getenv('CHROME_DRIVER'),
-            headless=os.getenv('HEADLESS')
+            headless= True if os.getenv('HEADLESS') in ['True', True] else False
         )
         context = browser.new_context()
         context = set_init_script(context)
