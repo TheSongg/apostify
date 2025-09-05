@@ -13,7 +13,7 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         res = super().to_representation(instance)
-        if self.context["view"].action in ["list"]:
+        if self.context["view"].action in ["list_accounts"]:
             if res["platform_type"]:
                 res["platform_type"] = {
                     "id": res["platform_type"],
@@ -27,7 +27,7 @@ class AccountSerializer(serializers.ModelSerializer):
         default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "cookie", "phone",
                           "account_id"]
         if "view" in self.context and "request" in self.context:
-            if self.context["view"].action == "list":
+            if self.context["view"].action == "list_accounts":
                 default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "account_id"]
         return {field: fields[field] for field in default_fields if field in fields}
 

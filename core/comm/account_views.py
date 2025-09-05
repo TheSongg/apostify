@@ -38,10 +38,7 @@ class AccountViewSet(BaseViewSet):
         # 特殊字段处理
         expiration_time = params.get("expiration_time")
         if expiration_time:
-            try:
-                filter_q &= Q(expiration_time__gt=int(expiration_time))
-            except ValueError:
-                pass
+            filter_q &= Q(expiration_time__gt=int(expiration_time))
 
         return queryset.filter(filter_q)
 
@@ -57,5 +54,5 @@ class AccountViewSet(BaseViewSet):
 
         with transaction.atomic():
             updated_instance = self.db_save(self.get_serializer_class(), data, instance)
-            serializer = self.get_serializer(updated_instance)
-        return Response(serializer.data)
+            self.get_serializer(updated_instance)
+        return Response({"status": "success", 'id': updated_instance.id})
