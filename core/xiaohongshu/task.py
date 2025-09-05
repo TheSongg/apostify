@@ -104,7 +104,7 @@ async def _release_video(page):
         await page.locator('button:has-text("发布")').click()
         await page.wait_for_url(
             os.getenv('XHS_VIDEO_SCHEDULED_RELEASE_PAGE'),
-            timeout=os.getenv('DEFAULT_TIMEOUT')
+            timeout=int(os.getenv('DEFAULT_TIMEOUT'))
         )  # 如果自动跳转到作品页面，则代表发布成功
 
 
