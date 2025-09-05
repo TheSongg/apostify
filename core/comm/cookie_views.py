@@ -26,30 +26,36 @@ class CookieViewSet(BaseViewSet):
     @action(detail=False, methods=['get'])
     def generate_xhs_cookie(self, request):
         # 在同步 view 中调用异步函数
-        asyncio.run(self._async_generate_xhs_cookie())
+        asyncio.run(self._async_generate_xiaohongshu_cookie())
         return Response("登录二维码保存成功！")
 
-    async def _async_generate_xhs_cookie(self):
-        async with async_playwright() as playwright:
-            # 初始化浏览器
-            browser, context, page = await self._init_browser(playwright)
+    async def _async_generate_xiaohongshu_cookie(self, nickname=None):
+        try:
+            async with async_playwright() as playwright:
+                # 初始化浏览器
+                browser, context, page = await self._init_browser(playwright)
 
-            # 生成二维码
-            qr_img_path = await self._generate_and_send_qr(page)
+                # 生成二维码
+                qr_img_path = await self._generate_and_send_qr(page)
 
-            # 使用 Telegram 机器人发送图片
-            if os.getenv('USE_TELEGRAM_BOT') in ['True', True]:
-                await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
+                # 使用 Telegram 机器人发送图片
+                if os.getenv('USE_TELEGRAM_BOT') in ['True', True]:
+                    await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
 
-            # 等待扫码登录
-            await self._wait_for_login(page)
+                # 等待扫码登录
+                await self._wait_for_login(page)
 
-            # 保存 cookie
-            await self._save_cookie(context)
+                # 保存 cookie
+                nickname = await self._save_cookie(context, nickname)
 
-            await browser.close()
-            logger.info("登录二维码保存成功！")
-            await asyncio.to_thread(os.remove, qr_img_path)
+                await browser.close()
+                logger.info("登录二维码保存成功！")
+                await send_message.send_message_to_all_bot(f"{nickname}小红书Cookie更新成功~")
+                await asyncio.to_thread(os.remove, qr_img_path)
+        except Exception as e:
+            logger.error(e)
+            msg = f"{nickname or ''}小红书Cookie更新失败，错误：{e}"
+            await send_message.send_message_to_all_bot(msg)
 
     @staticmethod
     async def _init_browser(playwright):
@@ -114,7 +120,7 @@ class CookieViewSet(BaseViewSet):
         logger.error("登录超时，二维码未被扫描！")
         raise Exception("登录超时，二维码未被扫描！")
 
-    async def _save_cookie(self, context):
+    async def _save_cookie(self, context, nickname=None):
         """异存 cookie 到数据库"""
         cookie = await context.storage_state()
         user_info = self.query_user_info(cookie)
@@ -129,12 +135,16 @@ class CookieViewSet(BaseViewSet):
             "cookie": cookie,
             "expiration_time": expiration_time
         }
+        if nickname is not None:
+            if nickname != data['nickname']:
+                raise Exception(f'请使用{nickname}账号扫码登录！')
 
         await self.update_account(data)
+        return data['nickname']
 
     @sync_to_async
-    def update_account(self, data):
-        instance = Account.objects.filter(account_id=data.get('account_id', '')).first()
+    def update_account(self, data, nickname):
+        instance = Account.objects.filter(account_id=data.get('account_id', ''), nickname=nickname).first()
         if instance:
             self.db_save(AccountSerializer, data, instance)
         else:
