@@ -25,8 +25,14 @@ async def _upload_for_account(browser, account, file_path, title, tags):
     await page.wait_for_url(os.getenv('XHS_VIDEO_PAGE'))
 
     await _upload_video_file(page, file_path)
+    await asyncio.sleep(0.5)
     await _fill_title(page, title)
+    await asyncio.sleep(0.5)
     await _fill_tags(page, tags)
+    await asyncio.sleep(0.5)
+    await _release_video(page)
+    await asyncio.sleep(0.5)
+
     await context.close()
 
 
@@ -93,6 +99,15 @@ async def _fill_tags(page, tags):
         await page.press(css_selector, "Space")
 
 
+async def _release_video(page):
+        # 等待包含"定时发布"文本的button元素出现并点击
+        await page.locator('button:has-text("发布")').click()
+        await page.wait_for_url(
+            os.getenv('XHS_VIDEO_SCHEDULED_RELEASE_PAGE'),
+            timeout=os.getenv('DEFAULT_TIMEOUT')
+        )  # 如果自动跳转到作品页面，则代表发布成功
+
+
 @shared_task
 def upload_videos(nickname, platform_type, file_path, title, tags, video_name):
     asyncio.run(async_upload_task(nickname, platform_type, file_path, title, tags, video_name))
@@ -123,7 +138,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
     if error_info:
         await send_message.send_message_to_all_bot(f'{";".join(error_info)}')
     else:
-        await send_message.send_message_to_all_bot('所有小红书账号上传成功！')
+        await send_message.send_message_to_all_bot(f'[{nickname}]小红书账号上传成功！')
 
     # 更新数据库，仍然同步
     await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
@@ -132,4 +147,4 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 def associated_account_and_video(account, video_name):
     with transaction.atomic():
         video_instance = Videos.objects.select_for_update().get(name=video_name)
-        video_instance.account.set(account)
+        video_instance.account.add(account)
