@@ -8,7 +8,6 @@ from telegram import Bot
 logger = logging.getLogger(__name__)
 
 
-
 async def send_img_to_telegram(img_path, msg=''):
     """异步通过 telegram 库发送图片"""
     bot = Bot(token=os.getenv("TG_BOT_TOKEN"))

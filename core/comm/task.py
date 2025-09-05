@@ -6,7 +6,6 @@ from playwright.async_api import async_playwright
 from utils.comm import get_chrome_driver
 from django.conf import settings
 from asgiref.sync import sync_to_async
-from datetime import datetime
 from core.comm import send_message
 from pathlib import Path
 import os
@@ -26,7 +25,8 @@ logger = logging.getLogger(__name__)
 def check_and_refresh_cookies():
     """检测即将过期的 cookie 并刷新"""
     threshold = timezone.now() + datetime.timedelta(hours=1)
-    expiring_accounts = Account.objects.filter(expiration_time__lte=threshold, is_available=True)
+    timestamp = int(threshold.timestamp())
+    expiring_accounts = Account.objects.filter(expiration_time__lte=timestamp, is_available=True)
     module = sys.modules[__name__]
     for account in expiring_accounts:
         try:
@@ -63,7 +63,7 @@ async def async_generate_xiaohongshu_cookie(nickname):
 
             await browser.close()
             logger.info("登录二维码保存成功！")
-            await send_message.send_message_to_all_bot(f"{nickname}小红书Cookie更新成功~")
+            await send_message.send_message_to_all_bot(f"[{nickname}]小红书Cookie更新成功~")
             await asyncio.to_thread(os.remove, qr_img_path)
     except Exception as e:
         logger.error(e)
@@ -109,7 +109,7 @@ async def _generate_and_send_qr(page):
     # 保存二维码图片
     _, b64data = src.split(",", 1)
     img_bytes = base64.b64decode(b64data)
-    save_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    save_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     qr_img_path = Path(settings.BASE_DIR / "core/xiaohongshu/qr_img" / f"qr_img_{save_time}.png")
 
     await asyncio.to_thread(lambda: qr_img_path.parent.mkdir(parents=True, exist_ok=True))

@@ -1,7 +1,7 @@
 *.log
 database.sqlite
-logs
-videos
+logs\*
+videos/*
 static
 *.pyc
 .venv

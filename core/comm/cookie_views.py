@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
 from .task import generate_xiaohongshu_cookie
 import json
+import os
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 
@@ -20,42 +21,43 @@ class CookieViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'])
     def toggle_task(self, request, *args, **kwargs):
-        task_name = request.data.get("task_name", "check_and_refresh_cookies")
-        enabled = request.data.get("enabled")
-        interval_hours = request.data.get("interval_hours", 12)  # 默认 12 小时
+        task_name = request.data.get(
+            "task_name", "core.comm.task.check_and_refresh_cookies"
+        )
+        interval_hours = request.data.get("interval_hours", os.getenv('COOKIE_INTERVAL_HOURS', 12))
+        enabled = str(request.data.get("enabled", "false")).lower() in ("true", "1", "yes")
 
-        if task_name is None or enabled is None:
-            return Response({"error": "缺少参数 task_name 或 enabled"}, status=400)
+        if task_name is None:
+            return Response({"error": "缺少参数 task_name"})
 
         try:
-            # 获取或创建 IntervalSchedule（小时为单位）
+            # 创建或获取 IntervalSchedule
             schedule, _ = IntervalSchedule.objects.get_or_create(
                 every=int(interval_hours),
                 period=IntervalSchedule.HOURS
             )
 
-            # 获取或创建任务
+            # 获取或创建 PeriodicTask
             task, created = PeriodicTask.objects.get_or_create(
                 task=task_name,
                 defaults={
                     "name": f"{task_name}_periodic",
                     "interval": schedule,
-                    "enabled": bool(enabled),
+                    "enabled": enabled,
                     "args": json.dumps([]),
                 }
             )
 
             if not created:
-                # 更新开关和周期
-                task.enabled = bool(enabled)
+                task.enabled = enabled
                 task.interval = schedule
                 task.save()
 
             return Response({
                 "message": f"任务 {task_name} {'已启动' if enabled else '已停止'}",
                 "enabled": task.enabled,
-                "interval_minutes": schedule.every
+                "interval_hours": schedule.every
             })
 
         except Exception as e:
-            return Response({"error": str(e)}, status=500)
+            return Response({"error": str(e)})
