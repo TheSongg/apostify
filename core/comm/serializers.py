@@ -11,11 +11,26 @@ class AccountSerializer(serializers.ModelSerializer):
         model = Account
         fields = "__all__"
 
+    def to_representation(self, instance):
+        res = super().to_representation(instance)
+        if self.context["view"].action in ["list"]:
+            if res["platform_type"]:
+                res["platform_type"] = {
+                    "id": res["platform_type"],
+                    "name": Account.PLATFORM_TYPE_CHOICES[res["platform_type"]]["zh"]
+                }
+
+        return res
+
     def get_fields(self):
-        fields = super(AccountSerializer, self).get_fields()
-        if self.context["request"].method in ["list"]:
-            fields = ['platform_type', 'nickname', 'expiration_time']
-        return fields
+        fields = super().get_fields()
+        default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "cookie", "phone",
+                          "account_id"]
+        if "view" in self.context and "request" in self.context:
+            if self.context["view"].action == "list":
+                default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "account_id"]
+        return {field: fields[field] for field in default_fields if field in fields}
+
 
 class VideosSerializer(serializers.ModelSerializer):
     upload_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
