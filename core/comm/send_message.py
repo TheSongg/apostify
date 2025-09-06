@@ -3,6 +3,7 @@ import sys
 import logging
 import asyncio
 from telegram import Bot
+from utils.static import BOT_LIST
 
 
 logger = logging.getLogger(__name__)
@@ -46,6 +47,3 @@ async def send_message_to_all_bot(text: str):
         for bot, result in zip(BOT_LIST, results):
             if isinstance(result, Exception):
                 logger.error(f"{bot} 发送失败: {result}")
-
-
-BOT_LIST = [k for k, v in os.environ.items() if k.startswith("USE_") and k.endswith("_BOT") and v in [True, 'True']]

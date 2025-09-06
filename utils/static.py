@@ -1,4 +1,5 @@
 from enum import Enum
+import os
 
 
 PLATFORM_TYPE_CHOICES = {
@@ -21,3 +22,5 @@ class PlatFormType(Enum):
     youtube = 6
     tiktok = 7
     instagram = 8
+
+BOT_LIST = [k for k, v in os.environ.items() if k.startswith("USE_") and k.endswith("_BOT") and v in [True, 'True']]

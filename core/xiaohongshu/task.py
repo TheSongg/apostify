@@ -140,11 +140,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
-            data = {
-                'account_id': account.account_id,
-                'nickname': account.nickname,
-                'cookie': cookie
-            }
+
             data = await save_cookie(context, instance=account, nickname=nickname)
             await update_account(data)
 
