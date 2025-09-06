@@ -8,18 +8,15 @@ from django.db import transaction
 from core.comm.models import Videos, Account
 from playwright.async_api import async_playwright
 import asyncio
+from utils.comm import init_browser
 
 
 logger = logging.getLogger(__name__)
 
 
-async def _upload_for_account(browser, account, file_path, title, tags):
+async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
-    context = await browser.new_context(storage_state=account.cookie)
-    context = await set_init_script(context)
-    page = await context.new_page()
-    page.set_default_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
-    page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+    browser, context, page = await init_browser(playwright, account.cookie)
 
     await page.goto(os.getenv('XHS_VIDEO_PAGE'))
     await page.wait_for_url(os.getenv('XHS_VIDEO_PAGE'))

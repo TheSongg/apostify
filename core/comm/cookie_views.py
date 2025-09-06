@@ -2,7 +2,7 @@ import logging
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
-from .task import generate_xiaohongshu_cookie
+from .task import generate_xiaohongshu_cookie, generate_douyin_cookie
 import json
 import os
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
@@ -17,6 +17,12 @@ class CookieViewSet(BaseViewSet):
     def generate_xhs_cookie(self, request):
         nickname = request.data.get('nickname', None)
         generate_xiaohongshu_cookie.delay(nickname)
+        return Response("后台执行中~")
+
+    @action(detail=False, methods=['post'])
+    def generate_douyin_cookie(self, request):
+        nickname = request.data.get('nickname', None)
+        generate_douyin_cookie.delay(nickname)
         return Response("后台执行中~")
 
     @action(detail=False, methods=['post'])
