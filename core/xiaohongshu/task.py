@@ -36,41 +36,49 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     return browser, context
 
 
-async def _upload_video_file(page, file_path, max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT')), interval=1):
+async def _upload_video_file(page, file_path,
+                             max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT', 60)),
+                             interval=1,
+                             max_retries=int(os.getenv('MAX_RETRIES'))):
     """
     异步上传视频并等待完成
     """
-    try:
-        # 上传文件
-        await page.locator("div[class^='upload-content'] input.upload-input").set_input_files(file_path)
+    for attempt in range(1, max_retries + 1):
+        try:
+            # 上传文件
+            await page.locator("div[class^='upload-content'] input.upload-input").set_input_files(file_path)
 
-        elapsed = 0
-        while elapsed < max_wait:
-            try:
-                # 等待上传输入框出现
-                upload_input = await page.wait_for_selector('input.upload-input', timeout=3000)
+            elapsed = 0
+            while elapsed < max_wait:
+                try:
+                    # 等待上传输入框出现
+                    upload_input = await page.wait_for_selector('input.upload-input', timeout=3000)
 
-                # 查找 preview-new 区域
-                preview_new = await upload_input.query_selector(
-                    'xpath=following-sibling::div[contains(@class, "preview-new")]'
-                )
-                if preview_new:
-                    stage_elements = await preview_new.query_selector_all('div.stage')
-                    for stage in stage_elements:
-                        text_content = await page.evaluate('(element) => element.textContent', stage)
-                        if '上传成功' in text_content:
-                            return  # 上传成功
+                    # 查找 preview-new 区域
+                    preview_new = await upload_input.query_selector(
+                        'xpath=following-sibling::div[contains(@class, "preview-new")]'
+                    )
+                    if preview_new:
+                        stage_elements = await preview_new.query_selector_all('div.stage')
+                        for stage in stage_elements:
+                            text_content = await page.evaluate('(element) => element.textContent', stage)
+                            if '上传成功' in text_content:
+                                return  # 上传成功
 
-                await asyncio.sleep(interval)
-            except:
-                # 等待期间未完成，继续轮询
-                await asyncio.sleep(interval)
-            finally:
-                elapsed += interval
+                    await asyncio.sleep(interval)
+                except:
+                    # 等待期间未完成，继续轮询
+                    await asyncio.sleep(interval)
+                finally:
+                    elapsed += interval
 
-        raise Exception('上传视频超时！')
-    except Exception as e:
-        raise Exception(f'上传视频失败，错误：{str(e)}')
+            raise Exception('上传视频超时！')
+        except Exception as e:
+            if attempt < max_retries:
+                logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
+                await asyncio.sleep(2)
+            else:
+                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
 
 
 async def _fill_title(page, title):

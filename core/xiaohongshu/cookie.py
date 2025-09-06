@@ -6,6 +6,7 @@ from utils.comm import init_browser, save_qr, update_account, query_expiration_t
 import json
 import asyncio
 from core.comm.serializers import AccountSerializer
+from utils.static import PlatFormType
 
 
 logger = logging.getLogger(__name__)
@@ -91,7 +92,7 @@ async def save_cookie(context, nickname=None, instance=None):
         data['expiration_time'] = expiration_time
     else:
         data = {
-            "platform_type": 1,
+            "platform_type": PlatFormType.xiaohongshu.value,
             "account_id": user_info.get('redId', ''),
             "nickname": user_info.get('userName', ''),
             "password": user_info.get('password', ''),

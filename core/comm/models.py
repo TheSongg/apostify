@@ -1,18 +1,9 @@
 from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
+from utils.static import PLATFORM_TYPE_CHOICES
 
 
 class Account(models.Model):
-    PLATFORM_TYPE_CHOICES = {
-        1: {'en': 'xiaohongshu', 'zh': '小红书'},
-        2: {'en': 'douyin', 'zh': '抖音'},
-        3: {'en': 'jinritoutiao', 'zh': '今日头条'},
-        4: {'en': 'shipinhao', 'zh': '视频号'},
-        5: {'en': 'kuaishou', 'zh': '快手'},
-        6: {'en': 'youtube', 'zh': 'YouTube'},
-        7: {'en': 'tiktok', 'zh': 'TikTok'},
-        8: {'en': 'instagram', 'zh': 'Instagram'},
-    }
     platform_type = models.IntegerField(
         null=False, blank=False,
         choices=[(key, value['zh']) for key, value in PLATFORM_TYPE_CHOICES.items()]

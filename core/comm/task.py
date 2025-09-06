@@ -7,6 +7,7 @@ import sys
 import asyncio
 from core.xiaohongshu.cookie import async_generate_xiaohongshu_cookie
 from core.douyin.cookie import async_generate_douyin_cookie
+from utils.static import PLATFORM_TYPE_CHOICES
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ def check_and_refresh_cookies():
     module = sys.modules[__name__]
     for account in expiring_accounts:
         try:
-            platform_type = account.PLATFORM_TYPE_CHOICES[account.platform_type]['en']
+            platform_type = PLATFORM_TYPE_CHOICES[account.platform_type]['en']
             func = getattr(module, f"generate_{platform_type}_cookie")
             func.delay(account.nickname)
 

@@ -8,6 +8,7 @@ import os
 from django.conf import settings
 from .task import upload_videos
 import pytz
+from utils.static import PlatFormType
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -16,7 +17,7 @@ logger = logging.getLogger("xiaohongshu")
 class VideoViewSet(BaseViewSet):
     serializer_class = VideosSerializer
     queryset = Videos.objects.all()
-    platform_type = 2
+    platform_type = PlatFormType.douyin.value
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request, *args, **kwargs):

@@ -1,5 +1,6 @@
 from .models import Account, Videos
 from rest_framework import serializers
+from utils.static import PLATFORM_TYPE_CHOICES
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -17,7 +18,7 @@ class AccountSerializer(serializers.ModelSerializer):
             if res["platform_type"]:
                 res["platform_type"] = {
                     "id": res["platform_type"],
-                    "name": Account.PLATFORM_TYPE_CHOICES[res["platform_type"]]["zh"]
+                    "name": PLATFORM_TYPE_CHOICES[res["platform_type"]]["zh"]
                 }
 
         return res

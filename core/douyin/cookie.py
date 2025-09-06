@@ -5,6 +5,7 @@ import os
 from core.comm.serializers import AccountSerializer
 from utils.comm import init_browser, save_qr, update_account, query_expiration_time
 import asyncio
+from utils.static import PlatFormType
 
 
 logger = logging.getLogger(__name__)
@@ -116,7 +117,7 @@ async def get_user_profile(cookie):
 def query_user_info(cookie, res_data, expiration_time):
     user_profile = res_data.get('user_profile', {})
     data = {
-        "platform_type": 2,
+        "platform_type": PlatFormType.douyin.value,
         "account_id": user_profile.get('unique_id', ''),
         "nickname": user_profile.get('nick_name', ''),
         "password": user_profile.get('password', ''),

@@ -9,6 +9,7 @@ import os
 from django.conf import settings
 from .task import upload_videos
 import pytz
+from utils.static import PlatFormType
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -17,7 +18,7 @@ logger = logging.getLogger("xiaohongshu")
 class VideoViewSet(BaseViewSet):
     serializer_class = VideosSerializer
     queryset = Videos.objects.all()
-    platform_type = 1
+    platform_type = PlatFormType.xiaohongshu.value
 
     @staticmethod
     def set_schedule_time(page, publish_date):
