@@ -5,6 +5,7 @@ import os
 from utils.comm import init_browser, save_qr, update_account, query_expiration_time
 import json
 import asyncio
+from core.comm.serializers import AccountSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -31,13 +32,13 @@ async def async_generate_xiaohongshu_cookie(nickname):
             await _wait_for_login(page)
 
             # 保存 cookie
-            data = await _save_cookie(context, nickname)
+            data = await save_cookie(context, nickname)
 
             await context.close()
             await browser.close()
             await update_account(data)
             logger.info("登录二维码保存成功！")
-            await send_message.send_message_to_all_bot(f"[{nickname}]小红书Cookie更新成功~")
+            await send_message.send_message_to_all_bot(f"[{data.get('nickname')}]小红书Cookie更新成功~")
 
     except Exception as e:
         logger.error(e)
@@ -64,7 +65,7 @@ async def _generate_qr(page):
     return src
 
 
-async def _wait_for_login(page, max_wait=60, interval=3):
+async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT')), interval=1):
     """轮询等待用户扫码登录"""
     num = 0
     while num < max_wait:
@@ -80,21 +81,25 @@ async def _wait_for_login(page, max_wait=60, interval=3):
     raise Exception("登录超时，二维码未被扫描！")
 
 
-async def _save_cookie(context, nickname=None):
+async def save_cookie(context, nickname=None, instance=None):
     """异存 cookie 到数据库"""
     cookie = await context.storage_state()
     user_info = query_user_info(cookie)
     expiration_time = query_expiration_time(cookie)
-    data = {
-        "platform_type": 1,
-        "account_id": user_info.get('redId', ''),
-        "nickname": user_info.get('userName', ''),
-        "password": user_info.get('password', ''),
-        "phone": user_info.get('phone', ''),
-        "email": user_info.get('email', ''),
-        "cookie": cookie,
-        "expiration_time": expiration_time
-    }
+    if instance is not None:
+        data = AccountSerializer(instance=instance).data
+        data['expiration_time'] = expiration_time
+    else:
+        data = {
+            "platform_type": 1,
+            "account_id": user_info.get('redId', ''),
+            "nickname": user_info.get('userName', ''),
+            "password": user_info.get('password', ''),
+            "phone": user_info.get('phone', ''),
+            "email": user_info.get('email', ''),
+            "cookie": cookie,
+            "expiration_time": expiration_time
+        }
     if nickname is not None:
         if nickname != data['nickname']:
             raise Exception(f'请使用{nickname}账号扫码登录！')

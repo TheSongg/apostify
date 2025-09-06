@@ -7,8 +7,9 @@ import os
 import base64
 import datetime
 from core.comm.serializers import AccountSerializer
-from core.comm.models import Account
 import asyncio
+from django.db import transaction
+from core.comm.models import Videos, Account
 
 
 def field_en_to_zh(instance, data):
@@ -132,3 +133,9 @@ def query_expiration_time(cookie):
         return int(min(expiration_time_list))
     except Exception as e:
         raise Exception(f'查询expiration_time异常，错误：{str(e)}')
+
+
+def associated_account_and_video(account, video_name):
+    with transaction.atomic():
+        video_instance = Videos.objects.select_for_update().get(name=video_name)
+        video_instance.account.add(account)

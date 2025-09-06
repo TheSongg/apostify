@@ -1,17 +1,20 @@
 from celery import shared_task
-from utils.comm import set_init_script
 import os
 from core.comm import send_message
-from utils.comm import get_chrome_driver
 import logging
-from django.db import transaction
-from core.comm.models import Videos, Account
+from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
-from utils.comm import init_browser
+from utils.comm import init_browser, associated_account_and_video, update_account
+from .cookie import save_cookie
 
 
 logger = logging.getLogger(__name__)
+
+
+@shared_task
+def upload_videos(nickname, platform_type, file_path, title, tags, video_name):
+    asyncio.run(async_upload_task(nickname, platform_type, file_path, title, tags, video_name))
 
 
 async def _upload_for_account(playwright, account, file_path, title, tags):
@@ -30,10 +33,10 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     await _release_video(page)
     await asyncio.sleep(0.5)
 
-    await context.close()
+    return browser, context
 
 
-async def _upload_video_file(page, file_path, max_wait=120, interval=1):
+async def _upload_video_file(page, file_path, max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT')), interval=1):
     """
     异步上传视频并等待完成
     """
@@ -59,10 +62,10 @@ async def _upload_video_file(page, file_path, max_wait=120, interval=1):
                             return  # 上传成功
 
                 await asyncio.sleep(interval)
-                elapsed += interval
-            except Exception:
+            except:
                 # 等待期间未完成，继续轮询
                 await asyncio.sleep(interval)
+            finally:
                 elapsed += interval
 
         raise Exception('上传视频超时！')
@@ -105,11 +108,6 @@ async def _release_video(page):
         )  # 如果自动跳转到作品页面，则代表发布成功
 
 
-@shared_task
-def upload_videos(nickname, platform_type, file_path, title, tags, video_name):
-    asyncio.run(async_upload_task(nickname, platform_type, file_path, title, tags, video_name))
-
-
 async def async_upload_task(nickname, platform_type, file_path, title, tags, video_name):
     error_info = []
 
@@ -120,28 +118,40 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             nickname=nickname
         ).first()
     )
+    try:
+        async with async_playwright() as playwright:
 
-    async with async_playwright() as playwright:
-        browser = await get_chrome_driver(playwright)
+            browser, context = await _upload_for_account(playwright, account, file_path, title, tags)
+            cookie = await context.storage_state()
+
+            # 发送通知
+            if error_info:
+                await send_message.send_message_to_all_bot(f'{";".join(error_info)}')
+            else:
+                await send_message.send_message_to_all_bot(f'[{nickname}]小红书账号发布成功！')
+
+            # 更新数据库，仍然同步
+            await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
+            data = {
+                'account_id': account.account_id,
+                'nickname': account.nickname,
+                'cookie': cookie
+            }
+            data = await save_cookie(context, instance=account, nickname=nickname)
+            await update_account(data)
+
+    except Exception as e:
+        logger.error(f'账号 {nickname} 上传失败，错误：{str(e)}')
+        error_info.append(f'账号 {nickname} 上传失败，错误：{str(e)}')
+    finally:
         try:
-            await _upload_for_account(browser, account, file_path, title, tags)
+            if context and not context._closed:  # 避免重复关闭
+                await context.close()
         except Exception as e:
-            logger.error(f'账号 {nickname} 上传失败，错误：{str(e)}')
-            error_info.append(f'账号 {nickname} 上传失败，错误：{str(e)}')
-        finally:
-            await browser.close()
+            logger.debug(f"关闭 context 出错: {e}")
 
-    # 发送通知
-    if error_info:
-        await send_message.send_message_to_all_bot(f'{";".join(error_info)}')
-    else:
-        await send_message.send_message_to_all_bot(f'[{nickname}]小红书账号上传成功！')
-
-    # 更新数据库，仍然同步
-    await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
-
-
-def associated_account_and_video(account, video_name):
-    with transaction.atomic():
-        video_instance = Videos.objects.select_for_update().get(name=video_name)
-        video_instance.account.add(account)
+        try:
+            if browser and not browser._closed:
+                await browser.close()
+        except Exception as e:
+            logger.debug(f"关闭 browser 出错: {e}")
