@@ -95,7 +95,7 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
    -e N8N_ENDPOINT_WEBHOOK_TEST=/webhook-cf \
    -e N8N_ENDPOINT_API=/api \
    -e N8N_DEFAULT_LOCALE=zh-CN \
-   -e N8N_HOST=cf.onlystar.top \
+   -e N8N_HOST=your domain name \
    -e WEBHOOK_URL=https://your domain name \
    -v n8n_data:/home/node/.n8n \
    n8nio/n8n
