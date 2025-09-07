@@ -82,10 +82,22 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
 4. **安装 n8n**
    通过 Docker 安装 n8n：
    ```bash
-   docker run -it -d \
-   --name n8n \
+   docker run -it -d --rm --name n8n \
    -p 5678:5678 \
-   -v ~/.n8n:/home/node/.n8n \
+   -e GENERIC_TIMEZONE="Asia/Shanghai" \
+   -e TZ="Asia/Shanghai" \
+   -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
+   -e N8N_RUNNERS_ENABLED=true \
+   -e N8N_SECURE_COOKIE=true \
+   -e N8N_PROTOCOL=https \
+   -e N8N_EDITOR_BASE_URL=https://your domain name \
+   -e N8N_ENDPOINT_WEBHOOK=/webhook \
+   -e N8N_ENDPOINT_WEBHOOK_TEST=/webhook-cf \
+   -e N8N_ENDPOINT_API=/api \
+   -e N8N_DEFAULT_LOCALE=zh-CN \
+   -e N8N_HOST=cf.onlystar.top \
+   -e WEBHOOK_URL=https://your domain name \
+   -v n8n_data:/home/node/.n8n \
    n8nio/n8n
    ```
 
