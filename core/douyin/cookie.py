@@ -6,6 +6,7 @@ from core.comm.serializers import AccountSerializer
 from utils.comm import init_browser, save_qr, update_account, query_expiration_time
 import asyncio
 from utils.static import PlatFormType
+from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
 
 
 logger = logging.getLogger(__name__)
@@ -18,7 +19,7 @@ async def async_generate_douyin_cookie(nickname):
             browser, context, page = await init_browser(playwright)
 
             # 打开主页
-            await page.goto(os.getenv('DOUYIN_HOME'))
+            await page.goto(DOUYIN_HOME)
 
             # 生成二维码
             src = await _generate_qr(page)
@@ -103,7 +104,7 @@ async def get_user_profile(cookie):
             browser, context, page = await init_browser(playwright, cookie)
 
             # 请求用户信息接口
-            response = await page.request.get(os.getenv('DOUYIN_USER_INFO'))
+            response = await page.request.get(DOUYIN_USER_INFO)
             res_data = await response.json()
 
             await context.close()

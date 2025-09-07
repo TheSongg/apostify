@@ -7,6 +7,7 @@ import json
 import asyncio
 from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
+from utils.config import XHS_HOME
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ async def async_generate_xiaohongshu_cookie(nickname):
             browser, context, page = await init_browser(playwright)
 
             # 打开主页
-            await page.goto(os.getenv('XHS_HOME'))
+            await page.goto(XHS_HOME)
 
             # 生成二维码
             src = await _generate_qr(page)

@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     'core.xiaohongshu',
     'core.douyin',
+    'core.shipinhao',
     'core.comm',
 ]
 
