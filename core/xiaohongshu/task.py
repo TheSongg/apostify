@@ -7,6 +7,7 @@ from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account
 from .cookie import save_cookie
+from utils.config import XHS_VIDEO_PAGE, XHS_VIDEO_SCHEDULED_RELEASE_PAGE
 
 
 logger = logging.getLogger(__name__)
@@ -21,8 +22,8 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
     browser, context, page = await init_browser(playwright, account.cookie)
 
-    await page.goto(os.getenv('XHS_VIDEO_PAGE'))
-    await page.wait_for_url(os.getenv('XHS_VIDEO_PAGE'))
+    await page.goto(XHS_VIDEO_PAGE)
+    await page.wait_for_url(XHS_VIDEO_PAGE)
 
     await _upload_video_file(page, file_path)
     await asyncio.sleep(0.5)
@@ -37,7 +38,6 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
 
 
 async def _upload_video_file(page, file_path,
-                             max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT', 60)),
                              interval=1,
                              max_retries=int(os.getenv('MAX_RETRIES'))):
     """
@@ -47,30 +47,28 @@ async def _upload_video_file(page, file_path,
         try:
             # 上传文件
             await page.locator("div[class^='upload-content'] input.upload-input").set_input_files(file_path)
+            try:
+                # 等待上传输入框出现
+                upload_input = await page.wait_for_selector(
+                    'input.upload-input',
+                    timeout=os.getenv('DEFAULT_TIMEOUT', 120000)
+                )
 
-            elapsed = 0
-            while elapsed < max_wait:
-                try:
-                    # 等待上传输入框出现
-                    upload_input = await page.wait_for_selector('input.upload-input', timeout=3000)
+                # 查找 preview-new 区域
+                preview_new = await upload_input.query_selector(
+                    'xpath=following-sibling::div[contains(@class, "preview-new")]'
+                )
+                if preview_new:
+                    stage_elements = await preview_new.query_selector_all('div.stage')
+                    for stage in stage_elements:
+                        text_content = await page.evaluate('(element) => element.textContent', stage)
+                        if '上传成功' in text_content:
+                            return  # 上传成功
 
-                    # 查找 preview-new 区域
-                    preview_new = await upload_input.query_selector(
-                        'xpath=following-sibling::div[contains(@class, "preview-new")]'
-                    )
-                    if preview_new:
-                        stage_elements = await preview_new.query_selector_all('div.stage')
-                        for stage in stage_elements:
-                            text_content = await page.evaluate('(element) => element.textContent', stage)
-                            if '上传成功' in text_content:
-                                return  # 上传成功
-
-                    await asyncio.sleep(interval)
-                except:
-                    # 等待期间未完成，继续轮询
-                    await asyncio.sleep(interval)
-                finally:
-                    elapsed += interval
+                await asyncio.sleep(interval)
+            except:
+                # 等待期间未完成，继续轮询
+                await asyncio.sleep(interval)
 
             raise Exception('上传视频超时！')
         except Exception as e:
@@ -111,8 +109,8 @@ async def _release_video(page):
         # 等待包含"定时发布"文本的button元素出现并点击
         await page.locator('button:has-text("发布")').click()
         await page.wait_for_url(
-            os.getenv('XHS_VIDEO_SCHEDULED_RELEASE_PAGE'),
-            timeout=int(os.getenv('DEFAULT_TIMEOUT'))
+            XHS_VIDEO_SCHEDULED_RELEASE_PAGE,
+            timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
         )  # 如果自动跳转到作品页面，则代表发布成功
 
 

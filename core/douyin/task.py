@@ -7,6 +7,8 @@ from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account
 from .cookie import save_cookie
+from utils.config import (DOUYIN_UPLOAD_PAGE, DOUYIN_UPLOAD_SUCCESS_PAGE_1,
+                          DOUYIN_UPLOAD_SUCCESS_PAGE_2, DOUYIN_MANAGE_PAGE)
 
 
 logger = logging.getLogger(__name__)
@@ -63,8 +65,8 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
     browser, context, page = await init_browser(playwright, account.cookie)
 
-    await page.goto(os.getenv('DOUYIN_UPLOAD_PAGE'))
-    await page.wait_for_url(os.getenv('DOUYIN_UPLOAD_PAGE'))
+    await page.goto(DOUYIN_UPLOAD_PAGE)
+    await page.wait_for_url(DOUYIN_UPLOAD_PAGE)
 
     await _upload_file(page, file_path)
     await asyncio.sleep(0.5)
@@ -77,7 +79,6 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
 
 
 async def _upload_file(page, file_path,
-                       max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT', 60)),
                        interval=1,
                        max_retries=int(os.getenv('MAX_RETRIES'))):
     """选择文件上传并等待跳转到发布页面，支持失败后重试"""
@@ -86,25 +87,21 @@ async def _upload_file(page, file_path,
             # 设置文件
             await page.locator("div[class^='container'] input").set_input_files(file_path)
 
-            elapsed = 0
-            while elapsed < max_wait:
+            try:
+                await page.wait_for_url(
+                    DOUYIN_UPLOAD_SUCCESS_PAGE_1,
+                    timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
+                )
+                return
+            except:
                 try:
                     await page.wait_for_url(
-                        os.getenv('DOUYIN_UPLOAD_SUCCESS_PAGE_1'),
-                        timeout=int(os.getenv('DEFAULT_TIMEOUT', 3000))
+                        DOUYIN_UPLOAD_SUCCESS_PAGE_2,
+                        timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
                     )
                     return
                 except:
-                    try:
-                        await page.wait_for_url(
-                            os.getenv('DOUYIN_UPLOAD_SUCCESS_PAGE_2'),
-                            timeout=int(os.getenv('DEFAULT_TIMEOUT', 3000))
-                        )
-                        return
-                    except:
-                        await asyncio.sleep(interval)
-                finally:
-                    elapsed += interval
+                    await asyncio.sleep(interval)
 
             raise TimeoutError("上传视频超时！")
 
@@ -145,17 +142,18 @@ async def _toggle_third_party(page):
             await page.locator(selector).locator('input.semi-switch-native-control').click()
 
 
-async def _publish_video(page, max_wait=int(os.getenv('VIDEO_UPLOAD_MAX_WAIT')), interval=1):
+async def _publish_video(page, max_retries=int(os.getenv('MAX_RETRIES')), interval=1):
     """点击发布并确认发布成功"""
-    elapsed = 0
-    while elapsed < max_wait:
+    for attempt in range(1, max_retries + 1):
         try:
             publish_button = page.get_by_role("button", name="发布", exact=True)
             if await publish_button.count():
                 await publish_button.click()
-            await page.wait_for_url(os.getenv('DOUYIN_MANAGE_PAGE'), timeout=os.getenv('DEFAULT_TIMEOUT'))
+            await page.wait_for_url(DOUYIN_MANAGE_PAGE, timeout=os.getenv('DEFAULT_TIMEOUT', 120000))
             return
-        except:
-            await asyncio.sleep(interval)
-        finally:
-            elapsed += interval
+        except Exception as e:
+            if attempt < max_retries:
+                logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
+                await asyncio.sleep(interval)
+            else:
+                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
