@@ -20,3 +20,8 @@ DOUYIN_UPLOAD_SUCCESS_PAGE_1="https://creator.douyin.com/creator-micro/content/p
 DOUYIN_UPLOAD_SUCCESS_PAGE_2="https://creator.douyin.com/creator-micro/content/post/video?enter_from=publish_page"
 #  出现说明发布成功
 DOUYIN_MANAGE_PAGE="https://creator.douyin.com/creator-micro/content/manage**"
+
+
+#  视频号
+SHIPINHAO_HOME="https://channels.weixin.qq.com/"
+SHIPINHAO_USER_INFO="https://channels.weixin.qq.com/cgi-bin/mmfinderassistant-bin/auth/auth_data"

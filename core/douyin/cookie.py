@@ -33,7 +33,7 @@ async def async_generate_douyin_cookie(nickname):
             await _wait_for_login(page)
 
             # 保存 cookie
-            data = await save_cookie(context, nickname)
+            data = await save_cookie(context, nickname, page=page)
 
             await context.close()
             await browser.close()
@@ -79,15 +79,16 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT')), inte
     raise Exception("登录超时，二维码未被扫描！")
 
 
-async def save_cookie(context, nickname=None, instance=None):
+async def save_cookie(context, nickname=None, instance=None, page=None):
     """异存 cookie 到数据库"""
     cookie = await context.storage_state()
     expiration_time = query_expiration_time(cookie)
     if instance is not None:
         data = AccountSerializer(instance=instance).data
         data['expiration_time'] = expiration_time
+        data['cookie'] = cookie
     else:
-        res_data = await get_user_profile(cookie)
+        res_data = await get_user_profile(page)
         data = query_user_info(cookie, res_data, expiration_time)
 
     if nickname is not None:
@@ -97,18 +98,12 @@ async def save_cookie(context, nickname=None, instance=None):
     return data
 
 
-async def get_user_profile(cookie):
+async def get_user_profile(page):
     """使用保存的登录态获取用户昵称"""
     try:
-        async with async_playwright() as playwright:
-            browser, context, page = await init_browser(playwright, cookie)
-
-            # 请求用户信息接口
-            response = await page.request.get(DOUYIN_USER_INFO)
-            res_data = await response.json()
-
-            await context.close()
-            await browser.close()
+        # 请求用户信息接口
+        response = await page.request.get(DOUYIN_USER_INFO)
+        res_data = await response.json()
 
         return res_data
     except Exception as e:

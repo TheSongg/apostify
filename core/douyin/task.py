@@ -31,7 +31,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
     )
     try:
         async with async_playwright() as playwright:
-            browser, context = await _upload_for_account(playwright, account, file_path, title, tags)
+            browser, context, page = await _upload_for_account(playwright, account, file_path, title, tags)
 
             # 发送通知
             if error_info:
@@ -42,7 +42,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
-            data = await save_cookie(context, instance=account, nickname=nickname)
+            data = await save_cookie(context, instance=account, nickname=nickname, page=page)
             await update_account(data)
     except Exception as e:
         logger.error(f'账号 {nickname} 上传失败，错误：{str(e)}')
@@ -75,7 +75,7 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     await _toggle_third_party(page)
     await asyncio.sleep(0.5)
     await _publish_video(page)
-    return browser, context
+    return browser, context, page
 
 
 async def _upload_file(page, file_path,

@@ -21,5 +21,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('xiaohongshu/', include('core.xiaohongshu.urls')),
     path('douyin/', include('core.douyin.urls')),
+    path('shipinhao/', include('core.shipinhao.urls')),
     path('comm/', include('core.comm.urls')),
 ]

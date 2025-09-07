@@ -7,6 +7,7 @@ import sys
 import asyncio
 from core.xiaohongshu.cookie import async_generate_xiaohongshu_cookie
 from core.douyin.cookie import async_generate_douyin_cookie
+from core.shipinhao.cookie import async_generate_shipinhao_cookie
 from utils.static import PLATFORM_TYPE_CHOICES
 
 
@@ -38,3 +39,8 @@ def generate_xiaohongshu_cookie(nickname=None):
 @shared_task
 def generate_douyin_cookie(nickname=None):
     asyncio.run(async_generate_douyin_cookie(nickname))
+
+
+@shared_task
+def generate_shipinhao_cookie(nickname=None):
+    asyncio.run(async_generate_shipinhao_cookie(nickname))

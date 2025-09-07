@@ -91,6 +91,7 @@ async def save_cookie(context, nickname=None, instance=None):
     if instance is not None:
         data = AccountSerializer(instance=instance).data
         data['expiration_time'] = expiration_time
+        data['cookie'] = cookie
     else:
         data = {
             "platform_type": PlatFormType.xiaohongshu.value,
