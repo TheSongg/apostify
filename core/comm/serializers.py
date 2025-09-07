@@ -26,7 +26,7 @@ class AccountSerializer(serializers.ModelSerializer):
     def get_fields(self):
         fields = super().get_fields()
         default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "cookie", "phone",
-                          "account_id"]
+                          "account_id", "verification_code"]
         if "view" in self.context and "request" in self.context:
             if self.context.get("view") and self.context["view"].action == "list_accounts":
                 default_fields = ["platform_type", "nickname", "expiration_time", "is_available", "account_id"]

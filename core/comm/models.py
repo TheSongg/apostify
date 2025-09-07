@@ -18,6 +18,7 @@ class Account(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
     is_available = models.BooleanField(default=True)
+    verification_code = models.CharField(max_length=50, null=True, blank=True)
 
 
 class Videos(models.Model):
