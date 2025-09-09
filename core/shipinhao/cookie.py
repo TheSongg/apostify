@@ -40,13 +40,12 @@ async def async_generate_shipinhao_cookie(nickname):
             await browser.close()
             await update_account(data)
             logger.info("登录二维码保存成功！")
-            await send_message.send_message_to_all_bot(f"[{data.get('nickname')}]视频号Cookie更新成功~")
-
+            msg = f"{nickname}视频号账号Cookie更新成功~" if nickname not in [None, '', 'None'] else f"新增{data['nickname']}视频号账号Cookie成功~"
     except Exception as e:
         logger.error(e)
-        msg = f"{nickname or ''}视频号Cookie更新失败，错误：{e}"
-        await send_message.send_message_to_all_bot(msg)
+        msg = f"{nickname}视频号Cookie更新失败，错误：{e}" if nickname not in [None, '', 'None'] else f"新增视频号Cookie失败，错误：{e}"
     finally:
+        await send_message.send_message_to_all_bot(msg)
         await asyncio.to_thread(os.remove, qr_img_path)
         
 

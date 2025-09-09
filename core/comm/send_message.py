@@ -4,6 +4,7 @@ import logging
 import asyncio
 from telegram import Bot
 from utils.static import BOT_LIST
+from telegram.helpers import escape_markdown
 
 
 logger = logging.getLogger(__name__)
@@ -21,14 +22,16 @@ async def send_message_to_telegram(text):
     """异步通过 Telegram Bot 发送文字"""
     bot = Bot(token=os.getenv("TG_BOT_TOKEN"))
     chat_id = os.getenv("CHAT_ID")
+    safe_text = escape_markdown(text, version=2)
+
     await bot.send_message(
         chat_id=chat_id,
-        text=text,
-        parse_mode="Markdown"
+        text=safe_text,
+        parse_mode="MarkdownV2"
     )
 
 
-async def send_message_to_all_bot(text: str):
+async def send_message_to_all_bot(text):
     """异步发送消息到所有机器人"""
     tasks = []
     module = sys.modules[__name__]
