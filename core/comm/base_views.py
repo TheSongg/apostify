@@ -12,6 +12,7 @@ from django.conf import settings
 from rest_framework.decorators import action
 import json
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
+from utils.static import PLATFORM_TYPE_CHOICES
 
 
 logger = logging.getLogger("app")
@@ -157,3 +158,7 @@ class BaseViewSet(viewsets.ModelViewSet):
 
         except Exception as e:
             return Response({"error": str(e)})
+
+    @action(detail=False, methods=['get'])
+    def support_platform(self, request, *args, **kwargs):
+        return Response(PLATFORM_TYPE_CHOICES)
