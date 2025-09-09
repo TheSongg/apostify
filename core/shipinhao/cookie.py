@@ -122,7 +122,7 @@ async def save_cookie(context, nickname=None, instance=None, auth_data_list=list
     else:
         data = await get_user_profile(auth_data_list, cookie, expiration_time)
 
-    if nickname is not None:
+    if nickname not in [None, '', 'None']:
         if nickname != data['nickname']:
             raise Exception(f'请使用{nickname}账号扫码登录！')
 

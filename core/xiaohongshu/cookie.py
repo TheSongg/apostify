@@ -103,7 +103,7 @@ async def save_cookie(context, nickname=None, instance=None):
             "cookie": cookie,
             "expiration_time": expiration_time
         }
-    if nickname is not None:
+    if nickname not in [None, '', 'None']:
         if nickname != data['nickname']:
             raise Exception(f'请使用{nickname}账号扫码登录！')
 
