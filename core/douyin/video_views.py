@@ -11,7 +11,7 @@ import pytz
 from utils.static import PlatFormType
 
 
-logger = logging.getLogger("xiaohongshu")
+logger = logging.getLogger("douyin")
 
 
 class VideoViewSet(BaseViewSet):

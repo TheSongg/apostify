@@ -10,7 +10,7 @@ from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("shipinhao")
 
 
 async def async_generate_shipinhao_cookie(nickname):

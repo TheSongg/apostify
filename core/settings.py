@@ -171,71 +171,88 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 log_dir = os.path.join(BASE_DIR, "logs")
 os.makedirs(log_dir, exist_ok=True)
 
-LOGIN_REDIRECT_URL = {
+LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
         "standard": {
             "format": "[%(asctime)s] %(levelname)s: %(message)s",
-            "style": "{",
             "datefmt": "%d/%b/%Y %H:%M:%S",
         },
-        "detailed": {
-            "format": "[%(asctime)s] %(levelname)s: %(message)s",
-            "style": "{",
-            "datefmt": "%d/%b/%Y %H:%M:%S",
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "stream": sys.stdout,
+            "formatter": "standard",
         },
-        "handlers": {
-            "console": {
-                "class": "logging.StreamHandler",
-                "stream": sys.stdout,
-                "formatter": "standard",
-            },
-            "file": {
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": BASE_DIR / 'logs' / 'django.log',
-                "stream": sys.stdout,
-                "formatter": "standard",
-                "maxBytes": 1048576,
-                "backupCount": 5,
-            },
-            "error_file": {
-                "level": "ERROR",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": BASE_DIR / 'logs' / 'error.log',
-                "stream": sys.stdout,
-                "formatter": "standard",
-                "maxBytes": 1048576,
-                "backupCount": 5,
-            },
-            "xiaohongshu": {
-                "level": "DEBUG",
-                "class": "logging.handlers.RotatingFileHandler",
-                "filename": BASE_DIR / 'logs' / 'xiaohongshu.log',
-                "stream": sys.stdout,
-                "formatter": "standard",
-                "maxBytes": 1048576,
-                "backupCount": 5,
-            },
+        "file": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs/django.log",
+            "formatter": "standard",
+            "maxBytes": 1048576,
+            "backupCount": 5,
         },
-        "loggers": {
-            "django": {
-                "handlers": ["console", "file", "error_file"],
-                "level": "INFO",
-                "propagate": True,
-            },
-            "app": {
-                "handlers": ["console", "file", "error_file"],
-                "level": "INFO",
-                "propagate": True,
-            },
-            'xiaohongshu': {
-                'handlers': ['xiaohongshu', 'console'],
-                'level': 'INFO',
-                'propagate': False,
-            },
-        }
-    }
+        "error_file": {
+            "level": "ERROR",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs/error.log",
+            "formatter": "standard",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+        },
+        "xiaohongshu": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs/xiaohongshu.log",
+            "formatter": "standard",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+        },
+        "douyin": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs/douyin.log",
+            "formatter": "standard",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+        },
+        "shipinhao": {
+            "level": "DEBUG",
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": BASE_DIR / "logs/shipinhao.log",
+            "formatter": "standard",
+            "maxBytes": 1048576,
+            "backupCount": 5,
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "app": {
+            "handlers": ["console", "file", "error_file"],
+            "level": "INFO",
+            "propagate": True,
+        },
+        "xiaohongshu": {
+            "handlers": ["xiaohongshu", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "douyin": {
+            "handlers": ["douyin", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "shipinhao": {
+            "handlers": ["shipinhao", "console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
 }
 
 REDIS_HOST = os.getenv("REDIS_HOST")

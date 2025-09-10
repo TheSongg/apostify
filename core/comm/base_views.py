@@ -15,7 +15,7 @@ from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from utils.static import PLATFORM_TYPE_CHOICES
 
 
-logger = logging.getLogger("app")
+logger = logging.getLogger(__name__)
 
 
 class BaseViewSet(viewsets.ModelViewSet):

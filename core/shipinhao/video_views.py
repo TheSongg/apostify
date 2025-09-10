@@ -12,13 +12,13 @@ import pytz
 from utils.static import PlatFormType
 
 
-logger = logging.getLogger("xiaohongshu")
+logger = logging.getLogger("shipinhao")
 
 
 class VideoViewSet(BaseViewSet):
     serializer_class = VideosSerializer
     queryset = Videos.objects.all()
-    platform_type = PlatFormType.xiaohongshu.value
+    platform_type = PlatFormType.shipinhao.value
 
     @staticmethod
     def set_schedule_time(page, publish_date):
@@ -54,7 +54,7 @@ class VideoViewSet(BaseViewSet):
             nickname=nickname
         )
         if not account.exists():
-            raise Exception('该小红书账号不可用，请先添加账号并生成Cookie！')
+            raise Exception('该视频号账号不可用，请先添加账号并生成Cookie！')
 
         month_dir_str = instance.upload_time.astimezone(
             pytz.timezone(settings.TIME_ZONE)

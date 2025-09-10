@@ -10,7 +10,7 @@ from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("douyin")
 
 
 async def async_generate_douyin_cookie(nickname):

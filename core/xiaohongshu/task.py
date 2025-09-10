@@ -10,7 +10,7 @@ from .cookie import save_cookie
 from utils.config import XHS_VIDEO_PAGE, XHS_VIDEO_SCHEDULED_RELEASE_PAGE
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("xiaohongshu")
 
 
 @shared_task

@@ -11,7 +11,7 @@ from utils.config import XHS_HOME
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("xiaohongshu")
 
 
 async def async_generate_xiaohongshu_cookie(nickname):
