@@ -8,6 +8,7 @@ import asyncio
 from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
 from utils.config import XHS_HOME
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
 logger = logging.getLogger(__name__)
@@ -66,20 +67,17 @@ async def _generate_qr(page):
     return src
 
 
-async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT')), interval=1):
-    """轮询等待用户扫码登录"""
-    num = 0
-    while num < max_wait:
-        # 查询元素
-        login_success = await page.query_selector("span:has-text('发布笔记')")
-        if login_success:
-            return
-
-        await asyncio.sleep(interval)
-        num += interval
-
-    logger.error("登录超时，二维码未被扫描！")
-    raise Exception("登录超时，二维码未被扫描！")
+async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180))):
+    """等待用户扫码登录，直到出现 '发布笔记' 按钮"""
+    try:
+        await page.wait_for_selector(
+            "span:has-text('发布笔记')",
+            timeout=max_wait * 1000  # 毫秒
+        )
+        return
+    except PlaywrightTimeoutError:
+        logger.error("登录超时，二维码未被扫描！")
+        raise Exception("登录超时，二维码未被扫描！")
 
 
 async def save_cookie(context, nickname=None, instance=None):

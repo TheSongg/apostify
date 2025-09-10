@@ -3,11 +3,11 @@ from playwright.async_api import async_playwright
 from core.comm import send_message
 import os
 from utils.comm import init_browser, save_qr, update_account, query_expiration_time
-import json
 import asyncio
 from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
 from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 
 logger = logging.getLogger(__name__)
@@ -68,46 +68,41 @@ async def _generate_qr(page):
 
 
 async def _wait_for_login(
-        page,
-        max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)),
-        interval=1,
-        max_retry=int(os.getenv('MAX_RETRIES', 3))
+    page,
+    max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180))
 ):
-    """轮询等待用户扫码登录，同时监听 auth_data 接口"""
+    """等待用户扫码登录，同时监听 auth_data 接口"""
     auth_data_list = []
 
-    # 定义响应处理函数
     async def handle_response(response):
         if response.url.startswith(SHIPINHAO_USER_INFO):
             try:
                 data = await response.json()
-                auth_data_list.append(data)
-                logger.info("捕获到 auth_data 接口返回数据: %s", data)
-            except:
-                logger.warning("非 JSON 响应: %s", response.url)
+                if data not in auth_data_list:
+                    auth_data_list.append(data)
+                    logger.info(f"捕获到 auth_data 接口返回数据: {data}")
+            except Exception:
+                logger.warning(f"非 JSON 响应: {response.url}")
 
     # 注册响应监听
-    page.on("response", lambda response: asyncio.create_task(handle_response(response)))
+    callback = lambda resp: asyncio.create_task(handle_response(resp))
+    page.on("response", callback)
 
-    for attempt in range(1, max_retry + 1):
-        logger.info("第 %d 次等待扫码登录...", attempt)
-        num = 0
+    try:
+        await page.wait_for_selector("span:has-text('发表')", timeout=max_wait * 1000)
 
-        while num < max_wait:
-            # 查询元素，判断是否登录成功
-            login_success = await page.query_selector("span:has-text('发表')")
-            if login_success and auth_data_list:
-                logger.info("用户已扫码登录且捕获到 auth_data 数据")
-                return auth_data_list
+        for _ in range(max_wait):
+            if auth_data_list:
+                logger.info("捕获到 auth_data 信息")
+                page.off("response", callback)
+                return auth_data_list[-1]
+            await asyncio.sleep(1)
 
-            await asyncio.sleep(interval)
-            num += interval
+        return auth_data_list[-1] if auth_data_list else None
 
-        logger.warning("第 %d 次尝试超时，未捕获到 auth_data 数据，重试...", attempt)
-
-    # 如果超过重试次数仍未捕获数据
-    logger.error("登录超时或未捕获到 auth_data 数据！")
-    raise Exception("登录超时或未捕获到 auth_data 数据")
+    except PlaywrightTimeoutError:
+        logger.error("登录超时，二维码未被扫描！")
+        raise Exception("登录超时，二维码未被扫描！")
 
 
 async def save_cookie(context, nickname=None, instance=None, auth_data_list=list):
