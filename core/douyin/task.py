@@ -11,7 +11,7 @@ from utils.config import (DOUYIN_UPLOAD_PAGE, DOUYIN_UPLOAD_SUCCESS_PAGE_1,
                           DOUYIN_UPLOAD_SUCCESS_PAGE_2, DOUYIN_MANAGE_PAGE)
 
 
-logger = logging.getLogger(douyin)
+logger = logging.getLogger("douyin")
 
 
 @shared_task
