@@ -56,3 +56,12 @@ class AccountViewSet(BaseViewSet):
             updated_instance = self.db_save(self.get_serializer_class(), data, instance)
             self.get_serializer(updated_instance)
         return Response({"status": "success", 'id': updated_instance.id})
+
+    @action(detail=True, methods=['get'])
+    def account_detail(self, request, pk=None, *args, **kwargs):
+        queryset = self.queryset.filter(id=pk).first()
+        if not queryset:
+            raise Exception(f"不存在该账号:{pk}")
+
+        serializer = self.get_serializer(queryset)
+        return Response(serializer.data)
