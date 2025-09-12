@@ -106,12 +106,12 @@ async def _fill_tags(page, tags):
 
 
 async def _release_video(page):
-        # 等待包含"定时发布"文本的button元素出现并点击
-        await page.locator('button:has-text("发布")').click()
-        await page.wait_for_url(
-            XHS_VIDEO_SCHEDULED_RELEASE_PAGE,
-            timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
-        )  # 如果自动跳转到作品页面，则代表发布成功
+    # 等待包含"定时发布"文本的button元素出现并点击
+    await page.locator('button:has-text("发布")').click()
+    await page.wait_for_url(
+        XHS_VIDEO_SCHEDULED_RELEASE_PAGE,
+        timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
+    )  # 如果自动跳转到作品页面，则代表发布成功
 
 
 async def async_upload_task(nickname, platform_type, file_path, title, tags, video_name):
@@ -128,7 +128,6 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
         async with async_playwright() as playwright:
 
             browser, context = await _upload_for_account(playwright, account, file_path, title, tags)
-            cookie = await context.storage_state()
 
             # 发送通知
             if error_info:

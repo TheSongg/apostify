@@ -67,38 +67,11 @@ async def _generate_qr(page):
     return src
 
 
-async def _wait_for_login(
-    page,
-    max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180))
-):
-    """等待用户扫码登录，同时监听 auth_data 接口"""
-    auth_data_list = []
-
-    async def handle_response(response):
-        if response.url.startswith(SHIPINHAO_USER_INFO):
-            try:
-                data = await response.json()
-                if data not in auth_data_list:
-                    auth_data_list.append(data)
-                    logger.info(f"捕获到 auth_data 接口返回数据: {data}")
-            except Exception:
-                logger.warning(f"非 JSON 响应: {response.url}")
-
-    # 注册响应监听
-    callback = lambda resp: asyncio.create_task(handle_response(resp))
-    page.on("response", callback)
-
+async def _wait_for_login(page):
     try:
-        await page.wait_for_selector("span:has-text('发表')", timeout=max_wait * 1000)
-
-        for _ in range(max_wait):
-            if auth_data_list:
-                logger.info("捕获到 auth_data 信息")
-                page.off("response", callback)
-                return auth_data_list[-1]
-            await asyncio.sleep(1)
-
-        return auth_data_list[-1] if auth_data_list else None
+        auth_data_list = await handle_response(page)
+        await page.wait_for_selector("span:has-text('发表')")
+        return auth_data_list
 
     except PlaywrightTimeoutError:
         logger.error("登录超时，二维码未被扫描！")
@@ -140,3 +113,28 @@ async def get_user_profile(auth_data_list, cookie, expiration_time):
             }
             return data
     raise Exception("沒有匹配到视频号用户数据！")
+
+async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180))):
+    """等待用户扫码登录，同时监听 auth_data 接口"""
+    auth_data_list = []
+    # 注册响应监听
+    async def listen(response):
+        if response.url.startswith(SHIPINHAO_USER_INFO):
+            try:
+                data = await response.json()
+                if data not in auth_data_list:
+                    auth_data_list.append(data)
+                    logger.info(f"捕获到 auth_data 接口返回数据: {data}")
+            except Exception:
+                logger.warning(f"非 JSON 响应: {response.url}")
+    callback = lambda resp: asyncio.create_task(listen(resp))
+    page.on("response", callback)
+
+    for _ in range(max_wait):
+        if auth_data_list:
+            logger.info("捕获到 auth_data 信息")
+            page.off("response", callback)
+            break
+        await asyncio.sleep(1)
+
+    return auth_data_list[-1] if auth_data_list else None

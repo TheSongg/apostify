@@ -20,26 +20,13 @@ class VideoViewSet(BaseViewSet):
     queryset = Videos.objects.all()
     platform_type = PlatFormType.shipinhao.value
 
-    @staticmethod
-    def set_schedule_time(page, publish_date):
-        # 点击 "定时发布" 复选框
-        label_element = page.locator("label:has-text('定时发布')")
-        label_element.click()
-        time.sleep(1)
-        publish_date_hour = publish_date.strftime("%Y-%m-%d %H:%M")
-        time.sleep(1)
-        page.locator('.el-input__inner[placeholder="选择日期和时间"]').click()
-        page.keyboard.press("Control+A")
-        page.keyboard.type(str(publish_date_hour))
-        page.keyboard.press("Enter")
-        time.sleep(1)
-
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request, *args, **kwargs):
         title = request.data.get("title", "")
         tags = request.data.get("tags", [])
         video_name = request.data.get("video_name")
         nickname = request.data.get("nickname")
+        category = request.data.get("category", None)
 
         if not video_name:
             raise Exception('视频名称不能为空！')
@@ -61,5 +48,5 @@ class VideoViewSet(BaseViewSet):
         ).strftime("%Y-%m")
         file_path = os.path.join(settings.BASE_DIR, "videos", month_dir_str, video_name)
 
-        upload_videos.delay(nickname, self.platform_type, file_path, title, tags, video_name)
+        upload_videos.delay(nickname, self.platform_type, file_path, title, tags, video_name, category)
         return Response('后台上传中，稍后请注意查看上传结果！')

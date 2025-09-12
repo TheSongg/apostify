@@ -25,3 +25,5 @@ DOUYIN_MANAGE_PAGE="https://creator.douyin.com/creator-micro/content/manage**"
 #  视频号
 SHIPINHAO_HOME="https://channels.weixin.qq.com/"
 SHIPINHAO_USER_INFO="https://channels.weixin.qq.com/cgi-bin/mmfinderassistant-bin/auth/auth_data"
+SHIPINHAO_UPLOAD_PAGE="https://channels.weixin.qq.com/platform/post/create"
+SHIPINHAO_UPLOAD_SUCCESS_PAGE="https://channels.weixin.qq.com/platform/post/list"
