@@ -107,10 +107,8 @@ services:
     command: uwsgi --ini uwsgi.ini
 
   celery-worker:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: apostify-base
+    depends_on:
+      - apostify
     image: apostify-image:latest
     container_name: celery-worker
     volumes:
@@ -128,10 +126,8 @@ services:
     command: celery -A core worker -l INFO --concurrency=8
 
   celery-beat:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile
-      target: apostify-base
+    depends_on:
+      - apostify
     image: apostify-image:latest
     container_name: celery-beat
     volumes:
