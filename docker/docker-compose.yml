@@ -93,7 +93,7 @@ services:
     ports:
       - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
     volumes:
-      - /apostify:/app
+      - ../:/app
     working_dir: /app
     environment:
       - DB_HOST=postgres
@@ -111,7 +111,7 @@ services:
     image: apostify-image:latest
     container_name: celery-worker
     volumes:
-      - /apostify:/app
+      - ../:/app
     working_dir: /app
     command: celery -A core worker -l INFO --concurrency=8
 
@@ -123,6 +123,6 @@ services:
     image: apostify-image:latest
     container_name: celery-beat
     volumes:
-      - /apostify:/app
+      - ../:/app
     working_dir: /app
     command: celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
