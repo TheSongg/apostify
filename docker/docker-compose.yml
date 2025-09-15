@@ -85,7 +85,8 @@ services:
     container_name: apostify
     build:
       context: ..
-      dockerfile: docker/Dockerfile.apostify-base
+      dockerfile: docker/Dockerfile
+      target: apostify-base
     restart: always
     ports:
       - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
