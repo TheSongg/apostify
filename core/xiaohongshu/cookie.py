@@ -27,9 +27,7 @@ async def async_generate_xiaohongshu_cookie(nickname):
             src = await _generate_qr(page)
             qr_img_path = await save_qr(src, 'xiaohongshu')
 
-            # 使用 Telegram 机器人发送图片
-            if os.getenv('USE_TELEGRAM_BOT') in ['True', True]:
-                await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
+            await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
 
             # 等待扫码登录
             await _wait_for_login(page)

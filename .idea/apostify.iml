@@ -21,7 +21,7 @@
       <excludeFolder url="file://$MODULE_DIR$/logs" />
       <excludeFolder url="file://$MODULE_DIR$/videos" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.10 (apostify)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="uv (apostify)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TemplatesService">

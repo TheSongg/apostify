@@ -258,7 +258,7 @@ LOGGING = {
 REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
 REDIS_PORT = os.getenv("REDIS_PORT")
-USE_REDIS = os.getenv("USE_REDIS")
+USE_REDIS = os.getenv("USE_REDIS", True)
 
 CACHES = {
     "default": {

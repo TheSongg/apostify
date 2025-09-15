@@ -1,0 +1,97 @@
+version: '3.8'
+
+volumes:
+  db_storage:
+  n8n_storage:
+  redis_storage:
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    ports:
+      - "${POSTGRES_POST}:${POSTGRES_POST}"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_N8N_DB}
+    volumes:
+      - db_storage:/var/lib/postgresql/data
+      - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_N8N_DB}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=${POSTGRES_POST}
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_N8N_DB}
+      - DB_POSTGRESDB_USER=${POSTGRES_N8N_USER}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_N8N_PASSWORD}
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - TZ=${TZ}
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_SECURE_COOKIE=true
+      - N8N_PROTOCOL=${N8N_PROTOCOL}
+      - N8N_EDITOR_BASE_URL=${N8N_EDITOR_BASE_URL}
+      - N8N_ENDPOINT_WEBHOOK=${N8N_ENDPOINT_WEBHOOK}
+      - N8N_ENDPOINT_WEBHOOK_TEST=${N8N_ENDPOINT_WEBHOOK_TEST}
+      - N8N_DEFAULT_LOCALE=${N8N_DEFAULT_LOCALE}
+      - N8N_HOST=${N8N_HOST}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+    volumes:
+      - n8n_storage:/home/node/.n8n
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  playwright:
+    container_name: playwright
+    build:
+      context: .
+      target: playwright-base
+    restart: always
+    ports:
+      - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}"
+    command: python -m playwright run-server --host=0.0.0.0 --port=${PLAYWRIGHT_PORT}
+
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}" ]
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    volumes:
+      - redis_storage:/data
+    environment:
+      - TZ=${TZ}
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping", "-a", "${REDIS_PASSWORD}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  apostify:
+    container_name: apostify
+    build:
+      context: ..
+      target: docker/Dockerfile.apostify-base
+    restart: always
+    ports:
+      - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
+    volumes:
+      - /apostify:/app
+    working_dir: /app
+    command: uwsgi --ini uwsgi.ini
