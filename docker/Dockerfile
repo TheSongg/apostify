@@ -1,4 +1,4 @@
-FROM python:3.10-slim AS playwright-base
+FROM python:3.11-slim AS playwright-base
 
 RUN apt-get update && apt-get install -y \
     curl unzip wget gnupg ca-certificates git \
@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir playwright
 RUN playwright install --with-deps chromium
 
 
-FROM python:3.10-slim AS apostify-base
+FROM python:3.11-slim AS apostify-base
 
 WORKDIR /app
 
