@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright/python:3.11-slim AS playwright-base
+FROM mcr.microsoft.com/playwright/python:latest AS playwright-base
 
 RUN apt-get update && apt-get install -y \
     curl unzip wget gnupg ca-certificates git \
