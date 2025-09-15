@@ -104,15 +104,19 @@ services:
     command: uwsgi --ini uwsgi.ini
 
   celery-worker:
-      image: apostify-image
-      container_name: celery-worker
-      volumes:
-        - /apostify:/app
-      working_dir: /app
-      command: celery -A core worker -l INFO --concurrency=8
+    image: apostify-image:latest
+    depends_on:
+      - apostify
+    container_name: celery-worker
+    volumes:
+      - /apostify:/app
+    working_dir: /app
+    command: celery -A core worker -l INFO --concurrency=8
 
   celery-beat:
-    image: apostify-image
+    image: apostify-image:latest
+    depends_on:
+      - apostify
     container_name: celery-beat
     volumes:
       - /apostify:/app
