@@ -59,6 +59,7 @@ services:
     build:
       context: .
       target: playwright-base
+    image: playwright-image:latest
     restart: always
     ports:
       - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}"
@@ -87,6 +88,7 @@ services:
       context: ..
       dockerfile: docker/Dockerfile
       target: apostify-base
+    image: apostify-image:latest
     restart: always
     ports:
       - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
@@ -100,3 +102,19 @@ services:
       - DB_USER=${POSTGRES_APOSTIFY_USER}
       - DB_PASSWORD=${POSTGRES_APOSTIFY_PASSWORD}
     command: uwsgi --ini uwsgi.ini
+
+  celery-worker:
+      image: apostify-image
+      container_name: celery-worker
+      volumes:
+        - /apostify:/app
+      working_dir: /app
+      command: celery -A core worker -l INFO --concurrency=8
+
+  celery-beat:
+    image: apostify-image
+    container_name: celery-beat
+    volumes:
+      - /apostify:/app
+    working_dir: /app
+    command: celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
