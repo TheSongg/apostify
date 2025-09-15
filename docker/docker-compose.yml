@@ -101,6 +101,9 @@ services:
       - DB_NAME=${POSTGRES_APOSTIFY_DB}
       - DB_USER=${POSTGRES_APOSTIFY_USER}
       - DB_PASSWORD=${POSTGRES_APOSTIFY_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: uwsgi --ini uwsgi.ini
 
   celery-worker:
@@ -113,6 +116,15 @@ services:
     volumes:
       - ../:/app
     working_dir: /app
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${POSTGRES_POST}
+      - DB_NAME=${POSTGRES_APOSTIFY_DB}
+      - DB_USER=${POSTGRES_APOSTIFY_USER}
+      - DB_PASSWORD=${POSTGRES_APOSTIFY_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: celery -A core worker -l INFO --concurrency=8
 
   celery-beat:
@@ -125,4 +137,13 @@ services:
     volumes:
       - ../:/app
     working_dir: /app
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${POSTGRES_POST}
+      - DB_NAME=${POSTGRES_APOSTIFY_DB}
+      - DB_USER=${POSTGRES_APOSTIFY_USER}
+      - DB_PASSWORD=${POSTGRES_APOSTIFY_PASSWORD}
+      - REDIS_HOST=redis
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     command: celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
