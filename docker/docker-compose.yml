@@ -104,7 +104,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: ["./start.sh"]
+    command: ["./start-uwsgi.sh"]
 
   celery-worker:
     depends_on:
