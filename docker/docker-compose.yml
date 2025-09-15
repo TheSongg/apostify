@@ -94,4 +94,10 @@ services:
     volumes:
       - /apostify:/app
     working_dir: /app
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=${POSTGRES_POST}
+      - DB_NAME=${POSTGRES_APOSTIFY_DB}
+      - DB_USER=${POSTGRES_APOSTIFY_USER}
+      - DB_PASSWORD=${POSTGRES_APOSTIFY_PASSWORD}
     command: uwsgi --ini uwsgi.ini
