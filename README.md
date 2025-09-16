@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-Apostify 是一个基于 Python 的自动化内容发布平台，专为 AI 生成内容（视频、文字、图片）的自动化上传与发布而设计。它通过集成 Telegram Bot（或 WhatsApp、飞书等）、n8n 和 Playwright，构建了一个高效的自动化工作流，助力内容创作者实现从 AI 视频生成到多平台发布的无缝衔接。其核心亮点在于：
+Apostify 是一个基于 Python 的自动化内容发布平台，专为 AI 生成内容（视频、文字、图片）的自动化上传与发布而设计。它通过集成 Telegram Bot、n8n 和 Playwright，构建了一个高效的自动化工作流，助力内容创作者实现从 AI 视频生成到多平台发布的无缝衔接。其核心亮点在于：
 
 - **AI 视频创作与审核**：支持 AI 生成的视频、文字和图片内容，通过 Telegram 机器人自动发送给作者进行审核。
 - **多平台自动发布**：审核通过的内容可自动上传至 YouTube、抖音、小红书等主流媒体平台。
@@ -26,21 +26,20 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
 ## 技术栈
 
 - **后端**：Django
-- **自动化**：n8n（工作流编排）、Playwright（浏览器自动化）
+- **自动化**：n8n（工作流编排）、Playwright（浏览器自动化）、Telegram Bot
 - **消息通知**：Telegram Bot、WhatsApp、飞书
 - **前端**：暂无
 - **数据库**：Postgres、Redis
 - **部署**：Docker
+- **代理**： Nginx
 
 ## 安装方式
 
 ### 前置条件
 
-- Python >= 3.10.8
+- linux 系统（配置 >= 2C2G）
 - Docker
-- n8n >= 1.106.4
-- Playwright >= 1.55.0
-- Telegram Bot Token（或 WhatsApp、飞书等消息平台 Token）
+- Telegram Bot Token
 - 目标平台（如 YouTube、抖音）的 账号（用于扫码登录）
 
 ### 安装步骤
@@ -48,106 +47,54 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
 1. **克隆仓库**
    ```bash
    git clone https://github.com/TheSongg/apostify.git
-   cd apostify
+   cd apostify/docker/
    ```
 
-2. **安装依赖**
-   ```bash
-   uv pip install -r .requirements.txt
-   ```
-
-3. **配置环境变量**
-   修改项目根目录下 `.env` 文件里的以下配置：
-   ```plaintext
-   # Telegram Bot（或其他平台）
-   TG_BOT_TOKEN=your bot token 
-   CHAT_ID=your telegram id
-
-   # PG 数据库
-   DB_NAME=your db name 
-   DB_USER=your db user
-   DB_PASSWORD=your db password
-   DB_HOST=your db host
-   DB_PORT=your db post
+2. **配置环境变量**
+   修改 `apostify/docker/`目录下 `.env` 文件里的以下配置：
    
-   #  Redis
-   REDIS_HOST=your redis host
-   REDIS_PASSWORD=your redis password
-   REDIS_PORT=your redis port
+   | 参数名称        | 说明                       | 默认值                 | 是否必须修改默认值 |
+   | ----------- |--------------------------|---------------------|-----------|
+   | TG_BOT_TOKEN | Telegram 机器人 Token       | N/A                 | 是         |
+   | CHAT_ID     | Telegram 目标聊天 ID         | N/A                 | 是         |
+   | N8N_PROTOCOL | n8n 服务协议（必须https）        | https               | 否         |
+   | N8N_HOST    | n8n 域名                   | N/A                 | 是         |
+   | N8N_EDITOR_BASE_URL | n8n 访问 URL               | https://{N8N_HOST}  | 是         |
+   | WEBHOOK_URL | n8n Webhook 基础 URL       | https://{N8N_HOST}  | 是         |
+   | N8N_ENDPOINT_WEBHOOK | n8n Webhook 接口路径         | webhook             | 否         |
+   | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径       | webhook-test        | 否         |
+   | N8N_DEFAULT_LOCALE | n8n 默认语言/区域              | zh-CN               | 否         |
+   | PLAYWRIGHT_PORT | Playwright 浏览器调试端口       | 9222                | 否         |
+   | CHROME_DRIVER | Playwright 浏览器 WebSocket 地址 | ws://127.0.0.1:9222 | 否         |
+   | HEADLESS    | 浏览器是否无头模式                | False               | 否         |
+   | COOKIE_INTERVAL_HOURS | Cookie 默认刷新时间（小时）        | 12                  | 否         |
+   | DEFAULT_TIMEOUT | 页面加载超时时间（毫秒）             | 120000              | 否         |
+   | COOKIE_MAX_WAIT | 等待用户扫码获取 Cookie 最大时间（秒）  | 180                 | 否         |
+   | MAX_RETRIES | 上传重试次数                   | 3                   | 否         |
+   | APOSTITFY_PORT | 后端服务端口                   | 8000                | 否         |
+   | POSTGRES_USER | PostgreSQL 超级用户          | your_user           | 是         |
+   | POSTGRES_PASSWORD | PostgreSQL 超级用户密码        | your_passwd         | 是         |
+   | POSTGRES_DB | PostgreSQL 默认数据库名称       | progres             | 否         |
+   | POSTGRES_POST | PostgreSQL 端口号           | 5432                | 否         |
+   | POSTGRES_APOSTIFY_DB | Apostify 服务使用的数据库名称      | apostify            | 否         |
+   | POSTGRES_N8N_DB | n8n 服务使用的数据库名称           | n8n                 | 否         |
+   | REDIS_PASSWORD | Redis 密码                 | your_passwd         | 是         |
+   | REDIS_PORT  | Redis 端口号                | 6379                | 否         |
+   | GENERIC_TIMEZONE | 系统通用时区                   | Asia/Shanghai       | 否         |
+   | TZ          | 容器/系统时区环境变量              | Asia/Shanghai       | 否         |
 
-   # Playwright 配置
-   CHROME_DRIVER=your playwright path
+
+3. **启动项目**
+    进入 `apostify/docker/` 目录，执行以下命令启动项目：
+   ```bash
+   docker compose build
+   docker compose up -d
    ```
 
-4. **安装 n8n**
-   通过 Docker 安装 n8n：
+4. **检查**
+    一共7个容器，检查是否都启动成功：
    ```bash
-   docker run -it -d --rm --name n8n \
-   -p 5678:5678 \
-   -e GENERIC_TIMEZONE="Asia/Shanghai" \
-   -e TZ="Asia/Shanghai" \
-   -e N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true \
-   -e N8N_RUNNERS_ENABLED=true \
-   -e N8N_SECURE_COOKIE=true \
-   -e N8N_PROTOCOL=https \
-   -e N8N_EDITOR_BASE_URL=https://your domain name \
-   -e N8N_ENDPOINT_WEBHOOK=/webhook \
-   -e N8N_ENDPOINT_WEBHOOK_TEST=/webhook-cf \
-   -e N8N_ENDPOINT_API=/api \
-   -e N8N_DEFAULT_LOCALE=zh-CN \
-   -e N8N_HOST=your domain name \
-   -e WEBHOOK_URL=https://your domain name \
-   -v n8n_data:/home/node/.n8n \
-   n8nio/n8n
-   ```
-
-5. **配置 Playwright**
-   通过 Docker 启动 Playwright Server：
-   ```bash
-   docker run -it -d \
-   --name playwright \
-   -p 9323:9323 \
-   -v ~/.playwright-data:/var/plawright \
-   --ipc=host \
-   mcr.microsoft.com/playwright/python \
-   bash -c "python -m playwright run-server --host=0.0.0.0 --port-9323"
-   ```
-
-6. **启动 PostgreSQL**
-   ```bash
-   docker run -it -d \
-   --name postgres-container \
-   -e POSTGRES_USER=youruser \
-   -e POSTGRES_PASSWORD=yourpassword \
-   -e POSTGRES_DB=yourdb \
-   -p 5432:5432 \
-   -v pgdata:/var/lib/postgresql/data \
-   postgres:latest
-   ```
-   
-7. **启动 Redis**
-   ```bash
-   docker run -d \
-   --name redis-container \
-   -p 6379:6379 \
-   -e REDIS_PASSWORD=yourpassword \
-   redis:latest \
-   redis-server --appendonly yes --requirepass yourpassword
-   ```
-
-8. **启动 Apostify**
-   ```bash
-   python manage.py runserver 8000 --settings=core.settings
-   ```
-
-9. **启动 celery worker**
-   ```bash
-   celery -A core worker -l INFO --concurrency=4
-   ```
-
-10. **启动 celery beat**
-   ```bash
-   celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
+   docker ps
    ```
 
 ## 使用示例
