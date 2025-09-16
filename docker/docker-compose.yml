@@ -158,4 +158,4 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: [ "/app/docker/celery-beat.sh", "celery", "-A", "core", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "-l", "INFO" ]
+    command: [ "/app/docker/celery-beat.sh"]

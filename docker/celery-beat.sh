@@ -15,3 +15,5 @@ while true; do
     sleep 2
   fi
 done
+
+celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
