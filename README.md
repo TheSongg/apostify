@@ -1,5 +1,6 @@
-![项目 Logo](static/logo.png)
-# Apostify：AI驱动的视频创作与多平台自动化发布工具
+<img src="https://github.com/TheSongg/apostify/blob/main/static/logo.png" width="1000px">
+
+# AI驱动的视频创作与多平台自动化发布工具
 
 ## 项目概述
 
