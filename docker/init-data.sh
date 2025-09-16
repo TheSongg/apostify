@@ -1,22 +1,32 @@
 #!/bin/bash
-set -e;
+set -e
 
+create_user_if_env() {
+  local db_name=$1
+  local user_var=$2
+  local pass_var=$3
 
-if [ -n "${POSTGRES_N8N_USER:-}" ] && [ -n "${POSTGRES_N8N_PASSWORD:-}" ]; then
-	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_N8N_DB" <<-EOSQL
-		CREATE USER ${POSTGRES_N8N_USER} WITH PASSWORD '${POSTGRES_N8N_PASSWORD}';
-		GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_N8N_DB} TO ${POSTGRES_N8N_USER};
-		GRANT CREATE ON SCHEMA public TO ${POSTGRES_N8N_USER};
-	EOSQL
-else
-	echo "SETUP INFO: No N8N Environment variables given!"
+  local user=${!user_var}
+  local pass=${!pass_var}
 
-if [ -n "${POSTGRES_APOSTIFY_USER:-}" ] && [ -n "${POSTGRES_APOSTIFY_PASSWORD:-}" ]; then
-	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_APOSTIFY_DB" <<-EOSQL
-		CREATE USER ${POSTGRES_APOSTIFY_USER} WITH PASSWORD '${POSTGRES_APOSTIFY_PASSWORD}';
-		GRANT ALL PRIVILEGES ON DATABASE ${POSTGRES_APOSTIFY_DB} TO ${POSTGRES_APOSTIFY_USER};
-		GRANT CREATE ON SCHEMA public TO ${POSTGRES_APOSTIFY_USER};
-	EOSQL
-else
-	echo "SETUP INFO: No Apostify Environment variables given!"
-fi
+  if [ -n "$user" ] && [ -n "$pass" ]; then
+    echo "Creating user $user for database $db_name ..."
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db_name" <<-EOSQL
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${user}') THEN
+          CREATE USER ${user} WITH PASSWORD '${pass}';
+        END IF;
+      END
+      \$\$;
+
+      GRANT ALL PRIVILEGES ON DATABASE ${db_name} TO ${user};
+      GRANT CREATE ON SCHEMA public TO ${user};
+EOSQL
+  else
+    echo "SETUP INFO: No environment variables for $db_name user given!"
+  fi
+}
+
+create_user_if_env "$POSTGRES_N8N_DB" "POSTGRES_N8N_USER" "POSTGRES_N8N_PASSWORD"
+create_user_if_env "$POSTGRES_APOSTIFY_DB" "POSTGRES_APOSTIFY_USER" "POSTGRES_APOSTIFY_PASSWORD"
