@@ -11,10 +11,25 @@ create_user_if_env() {
   local pass_val="${!pass}"
 
   if [ -n "$db_val" ] && [ -n "$user_val" ] && [ -n "$pass_val" ]; then
-    echo "Creating user $user_val for database $db_val"
+    echo "Ensuring database '$db_val' and user '$user_val' exist..."
+
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
-      CREATE DATABASE $db_val;
-      CREATE USER $user_val WITH PASSWORD '$pass_val';
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_database WHERE datname = '$db_val') THEN
+          CREATE DATABASE $db_val;
+        END IF;
+      END
+      \$\$;
+
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '$user_val') THEN
+          CREATE USER $user_val WITH PASSWORD '$pass_val';
+        END IF;
+      END
+      \$\$;
+
       GRANT ALL PRIVILEGES ON DATABASE $db_val TO $user_val;
       GRANT CREATE ON SCHEMA public TO $user_val;
 EOSQL
