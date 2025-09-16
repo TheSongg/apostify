@@ -2,6 +2,7 @@
 database.sqlite
 logs\*
 videos/*
+static
 *.pyc
 .venv
 .coverage

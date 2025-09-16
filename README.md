@@ -1,4 +1,4 @@
-<img src="https://github.com/TheSongg/apostify/blob/main/static/logo.png" width="1000px">
+<img src="https://github.com/TheSongg/apostify/blob/main/assets/logo.png" width="1000px">
 
 # AI驱动的视频创作与多平台自动化发布工具
 
