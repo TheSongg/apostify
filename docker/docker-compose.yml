@@ -19,7 +19,7 @@ services:
       - db_storage:/var/lib/postgresql/data
       - ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_N8N_DB} && pg_isready -postgres -U ${POSTGRES_USER} -d ${POSTGRES_APOSTIFY_DB}"]
+      test: ["CMD-SHELL", "pg_isready -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_N8N_DB} && pg_isready -h postgres -U ${POSTGRES_USER} -d ${POSTGRES_APOSTIFY_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -92,6 +92,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     image: apostify-image:latest
     restart: always
     ports:
@@ -113,6 +115,8 @@ services:
   celery-worker:
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
       apostify:
         condition: service_started
@@ -136,6 +140,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_healthy
       apostify:
         condition: service_started
     image: apostify-image:latest
@@ -152,4 +158,4 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: celery -A core beat --scheduler django_celery_beat.schedulers:DatabaseScheduler -l INFO
+    command: [ "/app/docker/celery-beat.sh", "celery", "-A", "core", "beat", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "-l", "INFO" ]

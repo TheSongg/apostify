@@ -15,9 +15,12 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app
+
+RUN chmod +x /app/docker/celery-beat.sh
