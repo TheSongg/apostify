@@ -3,6 +3,8 @@ set -e
 
 echo "Waiting for database $DB_NAME at $DB_HOST to have at least one table..."
 
+export PGPASSWORD=$DB_PASSWORD
+
 while true; do
   # 查询表数量
   TABLE_COUNT=$(psql -h "$DB_HOST" -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public';")

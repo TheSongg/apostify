@@ -25,3 +25,6 @@ COPY . /app
 
 COPY docker/celery-beat.sh /app/docker/celery-beat.sh
 RUN chmod +x /app/docker/celery-beat.sh
+
+COPY docker/apostify-back.sh /app/docker/apostify-back.sh
+RUN chmod +x /app/docker/apostify-back.sh

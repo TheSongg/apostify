@@ -2,6 +2,8 @@ volumes:
   db_storage:
   n8n_storage:
   redis_storage:
+  videos_storage:
+  qr_img_storage:
 
 services:
   postgres:
@@ -95,11 +97,12 @@ services:
       redis:
         condition: service_healthy
     image: apostify-image:latest
+    volumes:
+      - videos_storage:/app/videos
+      - qr_img_storage:/app/qr_img
     restart: always
     ports:
       - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
-    volumes:
-      - ../:/app
     working_dir: /app
     environment:
       - DB_HOST=postgres
@@ -110,7 +113,7 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: ["sh", "-c", "python manage.py makemigrations --settings=core.settings && python manage.py migrate --settings=core.settings && uwsgi --ini uwsgi.ini"]
+    command: [ "/app/docker/apostify-back.sh"]
 
   celery-worker:
     depends_on:
@@ -121,9 +124,10 @@ services:
       apostify:
         condition: service_started
     image: apostify-image:latest
-    container_name: celery-worker
     volumes:
-      - ../:/app
+      - videos_storage:/app/videos
+      - qr_img_storage:/app/qr_img
+    container_name: celery-worker
     working_dir: /app
     environment:
       - DB_HOST=postgres
@@ -145,9 +149,10 @@ services:
       apostify:
         condition: service_started
     image: apostify-image:latest
-    container_name: celery-beat
     volumes:
-      - ../:/app
+      - videos_storage:/app/videos
+      - qr_img_storage:/app/qr_img
+    container_name: celery-beat
     working_dir: /app
     environment:
       - DB_HOST=postgres
