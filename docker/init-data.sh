@@ -2,31 +2,26 @@
 set -e
 
 create_user_if_env() {
-  local db_name=$1
-  local user_var=$2
-  local pass_var=$3
+  local db="$1"
+  local user="$2"
+  local pass="$3"
 
-  local user=${!user_var}
-  local pass=${!pass_var}
+  local db_val="${!db}"
+  local user_val="${!user}"
+  local pass_val="${!pass}"
 
-  if [ -n "$user" ] && [ -n "$pass" ]; then
-    echo "Creating user $user for database $db_name ..."
-    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$db_name" <<-EOSQL
-      DO \$\$
-      BEGIN
-        IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = '${user}') THEN
-          CREATE USER ${user} WITH PASSWORD '${pass}';
-        END IF;
-      END
-      \$\$;
-
-      GRANT ALL PRIVILEGES ON DATABASE ${db_name} TO ${user};
-      GRANT CREATE ON SCHEMA public TO ${user};
+  if [ -n "$db_val" ] && [ -n "$user_val" ] && [ -n "$pass_val" ]; then
+    echo "Creating user $user_val for database $db_val"
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname postgres <<-EOSQL
+      CREATE DATABASE $db_val;
+      CREATE USER $user_val WITH PASSWORD '$pass_val';
+      GRANT ALL PRIVILEGES ON DATABASE $db_val TO $user_val;
+      GRANT CREATE ON SCHEMA public TO $user_val;
 EOSQL
   else
-    echo "SETUP INFO: No environment variables for $db_name user given!"
+    echo "SETUP INFO: Missing environment values for $db"
   fi
 }
 
-create_user_if_env "$POSTGRES_N8N_DB" "POSTGRES_N8N_USER" "POSTGRES_N8N_PASSWORD"
-create_user_if_env "$POSTGRES_APOSTIFY_DB" "POSTGRES_APOSTIFY_USER" "POSTGRES_APOSTIFY_PASSWORD"
+create_user_if_env POSTGRES_N8N_DB POSTGRES_N8N_USER POSTGRES_N8N_PASSWORD
+create_user_if_env POSTGRES_APOSTIFY_DB POSTGRES_APOSTIFY_USER POSTGRES_APOSTIFY_PASSWORD
