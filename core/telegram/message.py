@@ -2,6 +2,7 @@ import os
 import logging
 import asyncio
 from telegram import Bot
+from pathlib import Path
 
 
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto_delete=60):
     bot = Bot(token=TG_BOT_TOKEN)
-    if isinstance(img, str) and os.path.exists(img):
+    if isinstance(img, (str, Path)) and Path(img).exists():
         photo = open(img, "rb")
     elif isinstance(img, (bytes, bytearray)):
         photo = img
