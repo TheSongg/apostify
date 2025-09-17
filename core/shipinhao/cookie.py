@@ -8,12 +8,14 @@ from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
 from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from utils.telegram import to_html_table, account_list_inline_keyboard
 
 
 logger = logging.getLogger("shipinhao")
 
 
 async def async_generate_shipinhao_cookie(nickname):
+    gen_cookie = True
     try:
         async with async_playwright() as playwright:
             # 初始化浏览器
@@ -26,7 +28,7 @@ async def async_generate_shipinhao_cookie(nickname):
             src = await _generate_qr(page)
             qr_img_path = await save_qr(src, 'shipinhao')
 
-            await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆视频号！')
+            await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆视频号！<i>这条消息会在1分钟后删除~</i>')
 
             # 等待扫码登录
             auth_data_list = await _wait_for_login(page)
@@ -40,11 +42,14 @@ async def async_generate_shipinhao_cookie(nickname):
             logger.info("登录二维码保存成功！")
             msg = f"{nickname}视频号账号Cookie更新成功~" if nickname not in [None, '', 'None'] else f"新增{data['nickname']}视频号账号Cookie成功~"
     except Exception as e:
+        gen_cookie =False
         logger.error(e)
         msg = f"{nickname}视频号Cookie更新失败，错误：{e}" if nickname not in [None, '', 'None'] else f"新增视频号Cookie失败，错误：{e}"
     finally:
         await send_message.send_message_to_all_bot(msg)
         await asyncio.to_thread(os.remove, qr_img_path)
+        if gen_cookie:
+            await send_message.send_message_to_telegram(to_html_table(), reply_markup=account_list_inline_keyboard())
         
 
 async def _generate_qr(page):

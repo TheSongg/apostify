@@ -9,12 +9,14 @@ from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
 from utils.config import XHS_HOME
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
+from utils.telegram import to_html_table, account_list_inline_keyboard
 
 
 logger = logging.getLogger("xiaohongshu")
 
 
 async def async_generate_xiaohongshu_cookie(nickname):
+    gen_cookie = True
     try:
         async with async_playwright() as playwright:
             # 初始化浏览器
@@ -27,7 +29,7 @@ async def async_generate_xiaohongshu_cookie(nickname):
             src = await _generate_qr(page)
             qr_img_path = await save_qr(src, 'xiaohongshu')
 
-            await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！')
+            await send_message.send_img_to_telegram(qr_img_path, '请扫描二维码登陆小红书！<i>这条消息会在1分钟后删除~</i>')
 
             # 等待扫码登录
             await _wait_for_login(page)
@@ -41,11 +43,14 @@ async def async_generate_xiaohongshu_cookie(nickname):
             logger.info("登录二维码保存成功！")
             msg = f"{nickname}小红书账号Cookie更新成功~" if nickname not in [None, '', 'None'] else f"新增{data['nickname']}小红书账号Cookie成功~"
     except Exception as e:
+        gen_cookie =False
         logger.error(e)
         msg = f"{nickname}小红书Cookie更新失败，错误：{e}" if nickname not in [None, '', 'None'] else f"新增小红书Cookie失败，错误：{e}"
     finally:
         await send_message.send_message_to_all_bot(msg)
         await asyncio.to_thread(os.remove, qr_img_path)
+        if gen_cookie:
+            await send_message.send_message_to_telegram(to_html_table(), reply_markup=account_list_inline_keyboard())
 
 
 async def _generate_qr(page):

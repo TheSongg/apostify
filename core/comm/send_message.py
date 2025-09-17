@@ -4,30 +4,39 @@ import logging
 import asyncio
 from telegram import Bot
 from utils.static import BOT_LIST
-from telegram.helpers import escape_markdown
 
 
 logger = logging.getLogger(__name__)
 
 
-async def send_img_to_telegram(img_path, msg=''):
+async def send_img_to_telegram(img_path, msg='', parse_mode='HTML', reply_markup=None):
     """异步通过 telegram 库发送图片"""
     bot = Bot(token=os.getenv("TG_BOT_TOKEN"))
     chat_id = os.getenv("CHAT_ID")
     with open(img_path, "rb") as f:
-        await bot.send_photo(chat_id=chat_id, photo=f, caption=msg)
+        message = await bot.send_photo(
+            chat_id=chat_id,
+            photo=f,
+            caption=f"{msg}",
+            parse_mode=parse_mode,
+            reply_markup=reply_markup
+        )
+
+    # 60s后删除消息
+    await asyncio.sleep(60)
+    await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
 
 
-async def send_message_to_telegram(text):
+async def send_message_to_telegram(text, parse_mode='HTML', reply_markup=None):
     """异步通过 Telegram Bot 发送文字"""
     bot = Bot(token=os.getenv("TG_BOT_TOKEN"))
     chat_id = os.getenv("CHAT_ID")
-    safe_text = escape_markdown(text, version=2)
 
     await bot.send_message(
         chat_id=chat_id,
-        text=safe_text,
-        parse_mode="MarkdownV2"
+        text=text,
+        parse_mode=parse_mode,
+        reply_markup=reply_markup
     )
 
 
