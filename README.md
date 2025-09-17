@@ -1,4 +1,4 @@
-![# Apostify](assets/logo-new.png)
+![# Apostify](assets/logo.png)
 
 # AI驱动的视频创作与多平台自动化发布工具
 
