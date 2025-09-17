@@ -22,7 +22,7 @@ def pad_string(s, width):
     return s + ' ' * (width - display_width)
 
 
-def to_html_table():
+def account_list_html_table():
     headers = ["序号", "平台", "昵称", "cookie过期时间"]
     account_list = []
     for instance in AccountSerializer(many=True).data:

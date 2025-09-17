@@ -5,11 +5,15 @@ from asgiref.sync import sync_to_async
 from pathlib import Path
 import os
 import base64
+import logging
 import datetime
 from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
 from core.comm.models import Videos, Account
+
+
+logger = logging.getLogger(__name__)
 
 
 def field_en_to_zh(instance, data):
@@ -139,3 +143,13 @@ def associated_account_and_video(account, video_name):
     with transaction.atomic():
         video_instance = Videos.objects.select_for_update().get(name=video_name)
         video_instance.account.add(account)
+
+
+async def close_browser_context(browser, context):
+    try:
+        if context:
+            await context.close()
+        if browser:
+            await browser.close()
+    except Exception as e:
+        logger.debug(f"关闭 browser、context 出错: {e}")

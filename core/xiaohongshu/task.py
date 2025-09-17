@@ -1,11 +1,11 @@
 from celery import shared_task
 import os
-from core.comm import send_message
+from core.telegram.message import send_message
 import logging
 from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
-from utils.comm import init_browser, associated_account_and_video, update_account
+from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
 from .cookie import save_cookie
 from utils.config import XHS_VIDEO_PAGE, XHS_VIDEO_SCHEDULED_RELEASE_PAGE
 
@@ -115,7 +115,7 @@ async def _release_video(page):
 
 
 async def async_upload_task(nickname, platform_type, file_path, title, tags, video_name):
-    error_info = []
+    text = f'[{nickname}]抖音账号发布成功！'
 
     account = await asyncio.to_thread(
         lambda: Account.objects.filter(
@@ -129,12 +129,6 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
             browser, context = await _upload_for_account(playwright, account, file_path, title, tags)
 
-            # 发送通知
-            if error_info:
-                await send_message.send_message_to_all_bot(f'{";".join(error_info)}')
-            else:
-                await send_message.send_message_to_all_bot(f'[{nickname}]小红书账号发布成功！')
-
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
@@ -142,17 +136,8 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             await update_account(data)
 
     except Exception as e:
-        logger.error(f'账号 {nickname} 上传失败，错误：{str(e)}')
-        error_info.append(f'账号 {nickname} 上传失败，错误：{str(e)}')
+        text = f'账号 {nickname} 上传失败，错误：{str(e)}'
+        raise Exception(text)
     finally:
-        try:
-            if context and not context._closed:  # 避免重复关闭
-                await context.close()
-        except Exception as e:
-            logger.debug(f"关闭 context 出错: {e}")
-
-        try:
-            if browser and not browser._closed:
-                await browser.close()
-        except Exception as e:
-            logger.debug(f"关闭 browser 出错: {e}")
+        await close_browser_context(browser, context)
+        await send_message(text)
