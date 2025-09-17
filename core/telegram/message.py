@@ -6,27 +6,40 @@ from telegram import Bot
 
 TG_BOT_TOKEN = os.getenv("TG_BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
-TG_Bot = Bot(token=TG_BOT_TOKEN)
 logger = logging.getLogger(__name__)
 
 
-async def send_photo(img_path, caption='', parse_mode='HTML', reply_markup=None):
-    with open(img_path, "rb") as f:
-        message = await TG_Bot.send_photo(
+async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto_delete=60):
+    bot = Bot(token=TG_BOT_TOKEN)
+    if isinstance(img, str) and os.path.exists(img):
+        photo = open(img, "rb")
+    elif isinstance(img, (bytes, bytearray)):
+        photo = img
+    else:
+        raise ValueError("img 必须是有效路径或二进制数据")
+
+    try:
+        message = await bot.send_photo(
             chat_id=CHAT_ID,
-            photo=f,
-            caption=f"{caption}",
+            photo=photo,
+            caption=caption,
             parse_mode=parse_mode,
             reply_markup=reply_markup
         )
 
-    # 60s后删除消息
-    await asyncio.sleep(60)
-    await TG_Bot.delete_message(chat_id=CHAT_ID, message_id=message.message_id)
+        if auto_delete:
+            await asyncio.sleep(auto_delete)
+            await bot.delete_message(chat_id=CHAT_ID, message_id=message.message_id)
 
+        return message
+
+    finally:
+        if isinstance(photo, type(open(__file__))):
+            photo.close()
 
 async def send_message(text, parse_mode='HTML', reply_markup=None):
-    await TG_Bot.send_message(
+    bot = Bot(token=TG_BOT_TOKEN)
+    await bot.send_message(
         chat_id=CHAT_ID,
         text=text,
         parse_mode=parse_mode,

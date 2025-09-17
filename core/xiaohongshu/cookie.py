@@ -80,10 +80,13 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
             "span:has-text('发布笔记')",
             timeout=max_wait * 1000  # 毫秒
         )
+        logger.info('登录二维码已被扫描~')
         return
     except PlaywrightTimeoutError:
-        logger.error("登录超时，二维码未被扫描！")
-        raise Exception("登录超时，二维码未被扫描！")
+        logger.error("登录超时或二维码未被扫描！")
+        img_bytes = await page.screenshot(full_page=True)
+        await send_photo(img_bytes, caption='登录超时或二维码未被扫描！', auto_delete=None)
+        raise Exception("登录超时或二维码未被扫描！")
 
 
 async def save_cookie(context, nickname=None, instance=None):
@@ -109,7 +112,7 @@ async def save_cookie(context, nickname=None, instance=None):
     if nickname not in [None, '', 'None']:
         if nickname != data['nickname']:
             raise Exception(f'请使用{nickname}账号扫码登录！')
-
+    logger.info(f"{data['nickname']} cookie保存成功")
     return data
 
 
