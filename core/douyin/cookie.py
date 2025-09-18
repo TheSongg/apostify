@@ -121,6 +121,7 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
             # 点击验证按钮
             await verify_button.scroll_into_view_if_needed()
             await verify_button.click(force=True)
+            await page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000)
         else:
             raise Exception("未识别的页面状态！")
 
@@ -136,7 +137,7 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
         raise Exception(e)
     finally:
         if code_instance is not None:
-            await sync_to_async(code_instance.delete())()
+            await sync_to_async(code_instance.delete)()
 
 
 async def save_cookie(context, nickname=None, instance=None, page=None):
