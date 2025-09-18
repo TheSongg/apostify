@@ -2,7 +2,8 @@ import logging
 from playwright.async_api import async_playwright
 import os
 from core.comm.serializers import AccountSerializer
-from utils.comm import init_browser, save_qr, update_account, query_expiration_time, get_code_instance
+from utils.comm import (init_browser, save_qr, update_account, query_expiration_time,
+                        get_code_instance, delete_code_instance)
 import asyncio
 from utils.static import PlatFormType
 from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
@@ -93,6 +94,7 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
             logger.info("登录成功，二维码已被扫描~")
 
         elif "接收短信验证码" in text:
+            await delete_code_instance()
             await send_message("检测到需要输入验证码，发送 /code 启动流程")
             logger.warning("扫码成功，但需要短信验证码！")
             await asyncio.sleep(1)

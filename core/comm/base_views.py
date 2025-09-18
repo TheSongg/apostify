@@ -168,7 +168,9 @@ class BaseViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def fill_in_code(self, request):
         code = request.data.get("code", "")
-        if VerificationCode.objects.exists():
-            raise Exception("已存在验证码。请勿重复提交！")
+        old_instances = VerificationCode.objects.all()
+        if old_instances:
+            for instance in old_instances:
+                instance.delete()
         VerificationCode.objects.create(code=code.strip())
         return Response({"status": "success"})

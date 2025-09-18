@@ -164,3 +164,10 @@ def get_code_instance():
             return code_instance
 
     raise Exception("验证码异常或未收到验证码！")
+
+@sync_to_async
+def delete_code_instance():
+    old_instances = VerificationCode.objects.all()
+    if old_instances:
+        for instance in old_instances:
+            instance.delete()

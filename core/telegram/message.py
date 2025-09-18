@@ -38,12 +38,15 @@ async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto
         if isinstance(photo, type(open(__file__))):
             photo.close()
 
-async def send_message(text, parse_mode='HTML', reply_markup=None):
+async def send_message(text, parse_mode='HTML', reply_markup=None, auto_delete=60):
     bot = Bot(token=TG_BOT_TOKEN)
-    await bot.send_message(
+    message = await bot.send_message(
         chat_id=CHAT_ID,
         text=text,
         parse_mode=parse_mode,
         reply_markup=reply_markup
     )
 
+    if auto_delete:
+        await asyncio.sleep(auto_delete)
+        await bot.delete_message(chat_id=CHAT_ID, message_id=message.message_id)
