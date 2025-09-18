@@ -73,18 +73,19 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
     """等待用户扫码登录，直到出现 '高清发布' 按钮；如遇验证码，进入验证码处理"""
     code_instance = None
     try:
+        task1 = asyncio.create_task(page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000))
+        task2 = asyncio.create_task(page.wait_for_selector("text=接收短信验证码", timeout=max_wait * 1000))
+
         done, pending = await asyncio.wait(
-            [
-                page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000),
-                page.wait_for_selector("text=接收短信验证码", timeout=max_wait * 1000)
-            ],
+            [task1, task2],
             return_when=asyncio.FIRST_COMPLETED
         )
-        # 取第一个完成的
-        result = list(done)[0].result()
-        text = await result.inner_text()
 
-        # 取消没完成的等待，避免浪费
+        # 获取完成的结果
+        result = list(done)[0].result()
+        text = await result.inner_text()  # 注意 wait_for_selector 返回的是 ElementHandle，需要 await inner_text()
+
+        # 取消未完成的任务
         for task in pending:
             task.cancel()
 
