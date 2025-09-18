@@ -1,3 +1,5 @@
+![# Apostify](assets/logo.png)
+
 # AI驱动的视频创作与多平台自动化发布工具
 
 ## 项目概述
