@@ -170,5 +170,5 @@ class BaseViewSet(viewsets.ModelViewSet):
         code = request.data.get("code", "")
         if VerificationCode.objects.exists():
             raise Exception("已存在验证码。请勿重复提交！")
-        VerificationCode.objects.create(code=code)
+        VerificationCode.objects.create(code=code.strip())
         return Response({"status": "success"})

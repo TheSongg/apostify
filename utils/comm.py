@@ -10,7 +10,8 @@ import datetime
 from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
-from core.comm.models import Videos, Account
+import time
+from core.comm.models import Videos, Account, VerificationCode
 
 
 logger = logging.getLogger(__name__)
@@ -153,3 +154,13 @@ async def close_browser_context(browser, context):
             await browser.close()
     except Exception as e:
         logger.debug(f"关闭 browser、context 出错: {e}")
+
+@sync_to_async
+def get_code_instance():
+    for i in range(60):
+        time.sleep(1)
+        code_instance = VerificationCode.objects.first()
+        if code_instance:
+            return code_instance
+
+    raise Exception("验证码异常或未收到验证码！")
