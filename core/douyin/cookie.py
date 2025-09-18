@@ -9,6 +9,7 @@ from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
 from core.telegram.message import send_message, send_photo
+from core.comm.models import VerificationCode
 
 
 logger = logging.getLogger("douyin")
@@ -69,19 +70,59 @@ async def _generate_qr(page):
     return src
 
 async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180))):
-    """等待用户扫码登录，直到出现 '发布笔记' 按钮"""
+    """等待用户扫码登录，直到出现 '高清发布' 按钮；如遇验证码，进入验证码处理"""
+    code_instance = None
     try:
-        await page.wait_for_selector(
-            "span:has-text('高清发布')",
-            timeout=max_wait * 1000  # 毫秒
+        # 同时等待两个可能的元素
+        result = await page.wait_for_selector(
+            "span:has-text('高清发布'), div:has-text('接收短信验证码')",
+            timeout=max_wait * 1000
         )
-        logger.info('登录二维码已被扫描~')
-        return
+
+        text = await result.inner_text()
+
+        if "高清发布" in text:
+            logger.info("登录成功，二维码已被扫描~")
+
+        elif "接收短信验证码" in text:
+            await send_message("检测到需要输入验证码，发送 /code 启动流程")
+            logger.warning("扫码成功，但需要短信验证码！")
+            await asyncio.sleep(1)
+            await page.get_by_text("接收短信验证码").click(force=True)
+            code = None
+            for i in range(60):
+                await asyncio.sleep(1)
+                code_instance = VerificationCode.objects.first()
+                if code_instance and code_instance.code is not None:
+                    code = code_instance.code
+                    break
+            if code_instance is None or code is None:
+                raise Exception("验证码异常或未收到验证码！")
+
+            await asyncio.sleep(1)
+            input_box = page.locator("#button-input")
+            await input_box.click()
+            await input_box.type(code, delay=100)  # 每个字符间隔 100ms
+
+            await asyncio.sleep(1)
+            await page.click("button:has-text('验证')")
+        else:
+            raise Exception("未识别的页面状态！")
+
     except PlaywrightTimeoutError:
         logger.error("登录超时或二维码未被扫描！")
         img_bytes = await page.screenshot(full_page=True)
-        await send_photo(img_bytes, caption='登录超时或二维码未被扫描！', auto_delete=None)
+        await send_photo(img_bytes, caption="登录超时或二维码未被扫描！", auto_delete=None)
         raise Exception("登录超时或二维码未被扫描！")
+    except Exception as e:
+        logger.error(f"登录失败，异常：{e}")
+        img_bytes = await page.screenshot(full_page=True)
+        await send_photo(img_bytes, caption=f"登录失败，异常：{e}", auto_delete=None)
+        raise Exception(e)
+    finally:
+        if code_instance is not None:
+            code_instance.delete()
+
 
 async def save_cookie(context, nickname=None, instance=None, page=None):
     """异存 cookie 到数据库"""

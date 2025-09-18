@@ -13,6 +13,7 @@ from rest_framework.decorators import action
 import json
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from utils.static import PLATFORM_TYPE_CHOICES
+from core.comm.models import VerificationCode
 
 
 logger = logging.getLogger(__name__)
@@ -162,3 +163,12 @@ class BaseViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def support_platform(self, request, *args, **kwargs):
         return Response(PLATFORM_TYPE_CHOICES)
+
+
+    @action(detail=False, methods=['post'])
+    def fill_in_code(self, request):
+        code = request.data.get("code", "")
+        if VerificationCode.objects.exists():
+            raise Exception("已存在验证码。请勿重复提交！")
+        VerificationCode.objects.create(code=code)
+        return Response({"status": "success"})

@@ -18,10 +18,14 @@ class Account(models.Model):
     create_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
     is_available = models.BooleanField(default=True)
-    verification_code = models.CharField(max_length=50, null=True, blank=True)
 
 
 class Videos(models.Model):
     name = models.CharField(max_length=100, null=True, blank=True)
     upload_time = models.DateTimeField(auto_now_add=True)
     account = models.ManyToManyField(Account, blank=True, related_name='videos')
+
+
+class VerificationCode(models.Model):
+    code = models.CharField(max_length=50, null=False, blank=False)
+    create_time = models.DateTimeField(auto_now_add=True)
