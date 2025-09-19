@@ -94,36 +94,8 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
             logger.info("登录成功，二维码已被扫描~")
 
         elif "接收短信验证码" in text:
-            await delete_code_instance()
-            await send_message("检测到需要输入验证码，发送 /code 启动流程")
             logger.warning("扫码成功，但需要短信验证码！")
-            await asyncio.sleep(1)
-            await page.get_by_text("接收短信验证码").click(force=True)
-
-            #  获取验证码，由用户从tg bot输入
-            code_instance = await get_code_instance()
-
-            await asyncio.sleep(1)
-            # 先定位到包含 span 的父容器
-            container = page.locator("div:has(span:text('重新发送'))")
-
-            # 再找容器里的 input
-            input_box = container.locator("input#button-input")
-
-            # 等待输入框可见
-            await input_box.wait_for(state="visible", timeout=max_wait * 1000)
-
-            # 填入验证码
-            await input_box.click()
-            await input_box.type(code_instance.code, delay=100)  # 每个字符间隔 100ms
-
-            # 找到输入框下方的 div 文本为 “验证”
-            verify_button = input_box.locator("xpath=following::div[text()='验证']").first
-
-            # 点击验证按钮
-            await verify_button.scroll_into_view_if_needed()
-            await verify_button.click(force=True)
-            await page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000)
+            await file_in_code(page, max_wait)
         else:
             raise Exception("未识别的页面状态！")
 
@@ -141,6 +113,36 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
         if code_instance is not None:
             await sync_to_async(code_instance.delete)()
 
+async def file_in_code(page, max_wait):
+    await delete_code_instance()
+    await send_message("检测到需要输入验证码，发送 /code 启动流程")
+    await asyncio.sleep(1)
+    await page.get_by_text("接收短信验证码").click(force=True)
+
+    #  获取验证码，由用户从tg bot输入
+    code_instance = await get_code_instance()
+
+    await asyncio.sleep(1)
+    # 先定位到包含 span 的父容器
+    container = page.locator("div:has(span:text('重新发送'))")
+
+    # 再找容器里的 input
+    input_box = container.locator("input#button-input")
+
+    # 等待输入框可见
+    await input_box.wait_for(state="visible", timeout=max_wait * 1000)
+
+    # 填入验证码
+    await input_box.click()
+    await input_box.type(code_instance.code, delay=100)  # 每个字符间隔 100ms
+
+    # 找到输入框下方的 div 文本为 “验证”
+    verify_button = input_box.locator("xpath=following::div[text()='验证']").first
+
+    # 点击验证按钮
+    await verify_button.scroll_into_view_if_needed()
+    await verify_button.click(force=True)
+    await page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000)
 
 async def save_cookie(context, nickname=None, instance=None, page=None):
     """异存 cookie 到数据库"""
