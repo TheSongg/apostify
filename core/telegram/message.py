@@ -27,11 +27,6 @@ async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto
             parse_mode=parse_mode,
             reply_markup=reply_markup
         )
-
-        if auto_delete:
-            await asyncio.sleep(auto_delete)
-            await bot.delete_message(chat_id=CHAT_ID, message_id=message.message_id)
-
         return message
 
     finally:
@@ -47,6 +42,8 @@ async def send_message(text, parse_mode='HTML', reply_markup=None, auto_delete=6
         reply_markup=reply_markup
     )
 
-    if auto_delete:
-        await asyncio.sleep(auto_delete)
-        await bot.delete_message(chat_id=CHAT_ID, message_id=message.message_id)
+    return message
+
+
+async def delete_message(message_id):
+    await bot.delete_message(chat_id=CHAT_ID, message_id=message_id)
