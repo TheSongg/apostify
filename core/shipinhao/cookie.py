@@ -57,19 +57,25 @@ async def async_generate_shipinhao_cookie(nickname):
         
 
 async def _generate_qr(page):
-    # 定位 iframe，二维码不在page中
-    frame = page.frame_locator("iframe.display")
+    try:
+        # 定位 iframe，二维码不在page中
+        frame = page.frame_locator("iframe.display")
 
-    # 在 iframe 内查找二维码
-    qrcode_img = frame.locator("img.qrcode")
-    await qrcode_img.wait_for()
+        # 在 iframe 内查找二维码
+        qrcode_img = frame.locator("img.qrcode")
+        await qrcode_img.wait_for()
 
-    src = await qrcode_img.get_attribute("src")
-    if not (src and src.startswith("data:image")):
-        logger.error("未找到登录二维码！")
-        raise Exception("未找到登录二维码！")
+        src = await qrcode_img.get_attribute("src")
+        if not (src and src.startswith("data:image")):
+            logger.error("未找到登录二维码！")
+            raise Exception("未找到登录二维码！")
 
-    return src
+        return src
+    except Exception as e:
+        logger.error("获取视频号登录二维码异常！")
+        img_bytes = await page.screenshot(full_page=True)
+        await send_photo(img_bytes, caption='获取视频号登录二维码异常！')
+        raise Exception(f"获取视频号登录二维码异常！错误：{e}")
 
 
 async def _wait_for_login(page):
