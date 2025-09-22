@@ -134,16 +134,17 @@ async def get_user_profile(auth_data, cookie, expiration_time):
 
 async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180))):
     """等待用户扫码登录，同时监听 auth_data 接口"""
-    auth_data_list = []
+    auth_data = None
     event = asyncio.Event()
 
     async def listen(response):
+        nonlocal auth_data
         if response.url.startswith(SHIPINHAO_USER_INFO):
             try:
                 data = await response.json()
-                if data not in auth_data_list:
-                    auth_data_list.append(data)
-                    logger.info(f"捕获到 auth_data 接口")
+                if data.get("data", {}).get("finderUser", {}):
+                    auth_data = data
+                    logger.info("捕获到 auth_data 接口")
                     event.set()  # 通知主协程
             except Exception:
                 logger.warning(f"非 JSON 响应: {response.url}")
@@ -155,24 +156,13 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
     page.on("response", callback)
 
     try:
-        # 等待事件触发，或超时
         await asyncio.wait_for(event.wait(), timeout=max_wait)
-        if not auth_data_list:
-            raise Exception("未找到用户鉴权信息！")
-
-        for auth_data in auth_data_list:
-            if auth_data.get('data', {}).get('finderUser', {}):
-                return auth_data
-
-        logger.error(f"视频号用户鉴权信息{auth_data_list}")
-        raise Exception("用户鉴权信息为空或字段变更！")
-    except asyncio.TimeoutError:
-        raise Exception("等待 auth_data 超时！")
+        return auth_data
     except Exception as e:
         raise Exception(f"等待用户鉴权信息异常，错误：{e}")
     finally:
-        # 移除监听，避免泄漏
+        # 移除监听，避免内存泄漏
         try:
             page.remove_listener("response", callback)
         except Exception as e:
-            logger.error(f"移除监听失败: {e}")
+            logger.debug(f"移除监听失败: {e}")
