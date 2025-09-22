@@ -9,7 +9,7 @@ from utils.static import PlatFormType
 from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
-from core.telegram.message import send_message, send_photo
+from core.telegram.message import send_message, send_photo, delete_message
 from asgiref.sync import sync_to_async
 
 
@@ -17,8 +17,7 @@ logger = logging.getLogger("douyin")
 
 
 async def async_generate_douyin_cookie(nickname):
-    gen_cookie = True
-    msg = 'init'
+    gen_cookie, msg, message = True, 'init', None
     try:
         async with async_playwright() as playwright:
             # 初始化浏览器
@@ -31,7 +30,7 @@ async def async_generate_douyin_cookie(nickname):
             src = await _generate_qr(page)
             qr_img_path = await save_qr(src, 'douyin')
 
-            await send_photo(qr_img_path, caption='请扫描二维码登陆抖音！<i>这条消息会在1分钟后删除~</i>')
+            message = await send_photo(qr_img_path, caption='请扫描二维码登陆抖音！<i>这条消息会在1分钟后删除~</i>')
 
             # 等待扫码登录
             await _wait_for_login(page)
@@ -50,6 +49,8 @@ async def async_generate_douyin_cookie(nickname):
             else f"新增抖音Cookie失败，错误：{e}"
         logger.error(msg)
     finally:
+        if message is not None:
+            await delete_message(message)
         await send_message(msg)
         await asyncio.to_thread(os.remove, qr_img_path)
         if gen_cookie:
@@ -102,12 +103,12 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
     except PlaywrightTimeoutError:
         logger.error("登录超时或二维码未被扫描！")
         img_bytes = await page.screenshot(full_page=True)
-        await send_photo(img_bytes, caption="登录超时或二维码未被扫描！", auto_delete=None)
+        await send_photo(img_bytes, caption="登录超时或二维码未被扫描！")
         raise Exception("登录超时或二维码未被扫描！")
     except Exception as e:
         logger.error(f"登录失败，异常：{e}")
         img_bytes = await page.screenshot(full_page=True)
-        await send_photo(img_bytes, caption=f"登录失败，异常：{e}", auto_delete=None)
+        await send_photo(img_bytes, caption=f"登录失败，异常：{e}")
         raise Exception(e)
     finally:
         if code_instance is not None:

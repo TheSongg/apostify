@@ -10,7 +10,7 @@ CHAT_ID = os.getenv("CHAT_ID")
 logger = logging.getLogger(__name__)
 
 
-async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto_delete=60):
+async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None):
     bot = Bot(token=TG_BOT_TOKEN)
     if isinstance(img, (str, Path)) and Path(img).exists():
         photo = open(img, "rb")
@@ -33,7 +33,7 @@ async def send_photo(img, caption='', parse_mode='HTML', reply_markup=None, auto
         if isinstance(photo, type(open(__file__))):
             photo.close()
 
-async def send_message(text, parse_mode='HTML', reply_markup=None, auto_delete=60):
+async def send_message(text, parse_mode='HTML', reply_markup=None):
     bot = Bot(token=TG_BOT_TOKEN)
     message = await bot.send_message(
         chat_id=CHAT_ID,
@@ -45,5 +45,6 @@ async def send_message(text, parse_mode='HTML', reply_markup=None, auto_delete=6
     return message
 
 
-async def delete_message(message_id):
-    await bot.delete_message(chat_id=CHAT_ID, message_id=message_id)
+async def delete_message(message):
+    bot = Bot(token=TG_BOT_TOKEN)
+    await bot.delete_message(chat_id=CHAT_ID, message_id=message.id)
