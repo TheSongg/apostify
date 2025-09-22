@@ -90,11 +90,16 @@ async def init_browser(playwright, cookie=None):
     # 获取浏览器实例
     browser = await get_chrome_driver(playwright)
 
+    if os.getenv('HEADLESS') in ['True', True]:
+        viewport = {"width": int(os.getenv('WIDTH')), "height": int(os.getenv('HEIGHT'))}
+    else:
+        viewport = {}
+
     # 创建新上下文
     if cookie is None:
-        context = await browser.new_context()
+        context = await browser.new_context(viewport=viewport)
     else:
-        context = await browser.new_context(storage_state=cookie)
+        context = await browser.new_context(storage_state=cookie, viewport=viewport)
     context = await set_init_script(context)
 
     # 创建新页面

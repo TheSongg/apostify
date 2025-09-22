@@ -134,7 +134,7 @@ async def get_user_profile(auth_data, cookie, expiration_time):
 
 async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180))):
     """等待用户扫码登录，同时监听 auth_data 接口"""
-    auth_data = None
+    auth_data = {}
     event = asyncio.Event()
 
     async def listen(response):
@@ -159,6 +159,8 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
         await asyncio.wait_for(event.wait(), timeout=max_wait)
         return auth_data
     except Exception as e:
+        img_bytes = await page.screenshot(full_page=True)
+        await send_photo(img_bytes, caption='捕获到 auth_data 接口异常！')
         raise Exception(f"等待用户鉴权信息异常，错误：{e}")
     finally:
         # 移除监听，避免内存泄漏
