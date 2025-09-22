@@ -15,7 +15,7 @@ logger = logging.getLogger("shipinhao")
 
 
 async def async_generate_shipinhao_cookie(nickname):
-    gen_cookie, msg, message = True, 'init', None
+    gen_cookie, qr_img_path, msg, message = True, None, 'init', None
     try:
         async with async_playwright() as playwright:
             # 初始化浏览器
@@ -51,7 +51,8 @@ async def async_generate_shipinhao_cookie(nickname):
         if message is not None:
             await delete_message(message)
         await send_message(msg)
-        await asyncio.to_thread(os.remove, qr_img_path)
+        if qr_img_path is not None:
+            await asyncio.to_thread(os.remove, qr_img_path)
         if gen_cookie:
             await send_message(account_list_html_table(), reply_markup=account_list_inline_keyboard())
         

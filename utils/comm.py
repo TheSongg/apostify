@@ -90,16 +90,10 @@ async def init_browser(playwright, cookie=None):
     # 获取浏览器实例
     browser = await get_chrome_driver(playwright)
 
-    if os.getenv('HEADLESS') in ['True', True]:
-        viewport = {"width": int(os.getenv('WIDTH')), "height": int(os.getenv('HEIGHT'))}
-    else:
-        viewport = {}
-
     # 创建新上下文
-    if cookie is None:
-        context = await browser.new_context(viewport=viewport)
-    else:
-        context = await browser.new_context(storage_state=cookie, viewport=viewport)
+    args = generate_new_context_args(cookie=cookie)
+
+    context = await browser.new_context(**args)
     context = await set_init_script(context)
 
     # 创建新页面
@@ -108,6 +102,16 @@ async def init_browser(playwright, cookie=None):
     page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
 
     return browser, context, page
+
+def generate_new_context_args(cookie):
+    args = {}
+    if os.getenv('HEADLESS') in ['True', True]:
+        args['viewport'] = {"width": int(os.getenv('WIDTH')), "height": int(os.getenv('HEIGHT'))}
+
+    if cookie is not None:
+        args["storage_state"] = cookie
+
+    return args
 
 
 async def save_qr(src, path_name):
