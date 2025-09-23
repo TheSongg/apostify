@@ -11,6 +11,7 @@ from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
 import time
+from urllib.parse import unquote
 from core.comm.models import Videos, Account, VerificationCode
 
 
@@ -180,3 +181,11 @@ def delete_code_instance():
     if old_instances:
         for instance in old_instances:
             instance.delete()
+
+
+def get_http_head_parm(request, param):
+    try:
+        param = 'HTTP_' + param.upper()
+        return unquote(request.META.get(param))
+    except Exception:
+        return ''

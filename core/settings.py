@@ -19,6 +19,7 @@ load_dotenv(os.path.join(os.getcwd(), 'docker', '.env'))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+WHITELIST_URL = [{"method": "GET", "url": "/comm/test/"}]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -121,11 +122,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PARSER_CLASSES': ['rest_framework.parsers.JSONParser', 'rest_framework.parsers.FormParser',
                                'rest_framework.parsers.MultiPartParser'],
     'DEFAULT_RENDERER_CLASSES': [
-        'core.render.FitJSONRenderer',
+        'core.users.render.FitJSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
-    'DEFAULT_THROTTLE_CLASSES': ['core.throttle.UserThrottle'],
+    'DEFAULT_THROTTLE_CLASSES': ['core.users.throttle.UserThrottle'],
     'DEFAULT_THROTTLE_RATES': {'UserThrottleRate': '50/m'},
+    'DEFAULT_AUTHENTICATION_CLASSES': ['core.users.authentication.UserAuthentication'],
 }
 
 # Password validation
