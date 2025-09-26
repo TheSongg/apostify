@@ -3,12 +3,14 @@ from rest_framework.routers import DefaultRouter
 from .base_views import BaseViewSet
 from .cookie_views import CookieViewSet
 from .account_views import AccountViewSet
+from .schedule_views import ScheduleViewSet
 
 
 router = DefaultRouter()
 router.register(r'', BaseViewSet, basename='')
 router.register(r'cookie', CookieViewSet, basename='cookie')
 router.register(r'account', AccountViewSet, basename='account')
+router.register(r'schedule', ScheduleViewSet, basename='schedule')
 
 
 urlpatterns = [
