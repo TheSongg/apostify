@@ -20,8 +20,9 @@ class ScheduleViewSet(BaseViewSet):
         task_name = request.data.get(
             "task_name", "core.comm.task.refresh_cookies"
         )
-        interval_hours = request.data.get("interval_hours", os.getenv('COOKIE_INTERVAL_HOURS', 12))
+        interval_time = request.data.get("interval_time", os.getenv('COOKIE_INTERVAL_TIME', 60))
         enabled = str(request.data.get("enabled", "false")).lower() in ("true", "1", "yes")
+        period = request.data.get("period", os.getenv('COOKIE_PERIOD', IntervalSchedule.HOURS))
 
         if task_name is None:
             return Response({"error": "缺少参数 task_name"})
@@ -29,15 +30,15 @@ class ScheduleViewSet(BaseViewSet):
         try:
             # 创建或获取 IntervalSchedule
             schedule, _ = IntervalSchedule.objects.get_or_create(
-                every=int(interval_hours),
-                period=IntervalSchedule.HOURS
+                every=int(interval_time),
+                period=period
             )
 
             # 获取或创建 PeriodicTask
             task, created = PeriodicTask.objects.get_or_create(
                 task=task_name,
                 defaults={
-                    "name": f"{task_name}_periodic",
+                    "name": task_name,
                     "interval": schedule,
                     "enabled": enabled,
                     "args": json.dumps([]),
@@ -65,4 +66,10 @@ class ScheduleViewSet(BaseViewSet):
         """
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        data = []
+        for obj in serializer.data:
+            if obj["name"] == "backend_cleanup":
+                continue
+            data.append(obj)
+
+        return Response(data)

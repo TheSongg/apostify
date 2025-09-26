@@ -3,6 +3,7 @@ from rest_framework import serializers
 from utils.static import PLATFORM_TYPE_CHOICES
 from datetime import datetime, timezone, timedelta
 from django_celery_beat.models import PeriodicTask
+from dateutil.parser import parse
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -78,6 +79,15 @@ class PeriodicTaskSerializer(serializers.ModelSerializer):
         elif obj.clocked:
             return f"一次性执行 @ {obj.clocked.clocked_time.isoformat()}"
         return "未知频率"
+
+    def to_representation(self, instance):
+        res = super().to_representation(instance)
+
+        if self.context.get("view") and self.context["view"].action in ["list_task"]:
+            res["name"] = res["name"].split(".")[-1]
+            res["last_run_at"] = parse(res["last_run_at"]).strftime("%Y-%m-%d %H:%M:%S") if res["last_run_at"] else None
+
+        return res
 
 
     def get_fields(self):

@@ -30,8 +30,9 @@ def refresh_cookies():
         except Exception as e:
             error.append(f"{platform['zh']}_{account.nickname}刷新cookie失败， 错误：{e}")
 
-    error_msg = '\n'.join(error)
-    asyncio.run(send_message(error_msg))
+    if error:
+        error_msg = '\n'.join(error)
+        asyncio.run(send_message(error_msg))
 
 
 @shared_task
