@@ -70,7 +70,8 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
    | PLAYWRIGHT_PORT           | Playwright 浏览器调试端口          | 9222                 | 否         |
    | CHROME_DRIVER             | Playwright 浏览器 WebSocket 地址 | ws://playwright:9222 | 否         |
    | HEADLESS                  | 浏览器是否无头模式                   | False                | 否         |
-   | COOKIE_INTERVAL_HOURS     | Cookie 默认刷新时间（小时）           | 12                   | 否         |
+   | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔               | 60                   | 否         |
+   | COOKIE_PERIOD             | Cookie 自动刷新周期               | minutes              | 否         |
    | DEFAULT_TIMEOUT           | 页面加载超时时间（毫秒）                | 120000               | 否         |
    | COOKIE_MAX_WAIT           | 等待用户扫码获取 Cookie 最大时间（秒）     | 180                  | 否         |
    | MAX_RETRIES               | 上传重试次数                      | 3                    | 否         |
