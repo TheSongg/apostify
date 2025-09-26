@@ -3,7 +3,6 @@ from rest_framework import serializers
 from utils.static import PLATFORM_TYPE_CHOICES
 from datetime import datetime, timezone, timedelta
 from django_celery_beat.models import PeriodicTask
-from django.utils import timezone
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -80,12 +79,6 @@ class PeriodicTaskSerializer(serializers.ModelSerializer):
             return f"一次性执行 @ {obj.clocked.clocked_time.isoformat()}"
         return "未知频率"
 
-    @staticmethod
-    def get_next_run(obj):
-        """返回格式化的下次执行时间，如果 next_run_time 为空则返回 None"""
-        if obj.next_run_time:
-            return timezone.localtime(obj.next_run_time).strftime('%Y-%m-%d %H:%M:%S %Z')
-        return None
 
     def get_fields(self):
         fields = super().get_fields()

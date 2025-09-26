@@ -51,11 +51,12 @@ async def async_generate_xiaohongshu_cookie(nickname):
     finally:
         if message is not None:
             await delete_message(message)
-        await send_message(msg)
+        msg_bot = await send_message(msg)
         if qr_img_path is not None:
             await asyncio.to_thread(os.remove, qr_img_path)
         if gen_cookie:
-            await send_message(account_list_html_table(), reply_markup=account_list_inline_keyboard())
+            await delete_message(msg_bot)
+            await send_message(await account_list_html_table(), reply_markup=account_list_inline_keyboard())
 
 
 async def _generate_qr(page):

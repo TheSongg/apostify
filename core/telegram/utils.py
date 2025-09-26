@@ -1,4 +1,6 @@
 from core.comm.serializers import AccountSerializer
+from core.comm.models import Account
+from asgiref.sync import sync_to_async
 import unicodedata
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from utils.static import PLATFORM_TYPE_CHOICES
@@ -22,10 +24,13 @@ def pad_string(s, width):
     return s + ' ' * (width - display_width)
 
 
+@sync_to_async
 def account_list_html_table():
     headers = ["序号", "平台", "昵称", "cookie过期时间"]
     account_list = []
-    for instance in AccountSerializer(many=True).data:
+    accounts = Account.objects.all()
+    serializer = AccountSerializer(accounts, many=True)
+    for instance in serializer.data:
         account_list.append(
             {
                 "platfrom": PLATFORM_TYPE_CHOICES[instance["platform_type"]]["zh"],
