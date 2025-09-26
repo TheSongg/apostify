@@ -1,10 +1,10 @@
 #  小红书
 #  上传视频页面
-XHS_VIDEO_PAGE="https://creator.xiaohongshu.com/publish/publish?from=homepage&target=video"
+XIAOHONGSHU_UPLOAD_PAGE= "https://creator.xiaohongshu.com/publish/publish?from=homepage&target=video"
 #  发布视频页面
-XHS_VIDEO_SCHEDULED_RELEASE_PAGE="https://creator.xiaohongshu.com/publish/success?**"
+XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE= "https://creator.xiaohongshu.com/publish/success?**"
 #  获取cookie
-XHS_HOME="https://creator.xiaohongshu.com/"
+XIAOHONGSHU_HOME= "https://creator.xiaohongshu.com/"
 
 
 #  抖音

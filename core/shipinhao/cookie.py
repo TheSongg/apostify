@@ -5,7 +5,7 @@ from utils.comm import init_browser, save_qr, update_account, query_expiration_t
 import asyncio
 from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
-from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO
+from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO, SHIPINHAO_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
 from core.telegram.message import send_message, send_photo, delete_message
@@ -169,3 +169,18 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
             page.remove_listener("response", callback)
         except Exception as e:
             logger.debug(f"移除监听失败: {e}")
+
+
+async def refresh_cookie(account):
+    try:
+        async with async_playwright() as playwright:
+            browser, context, page = await init_browser(playwright, account.cookie)
+            await page.goto(SHIPINHAO_UPLOAD_PAGE)
+            data = await save_cookie(context, nickname=account.nickname, instance=account)
+
+            await context.close()
+            await browser.close()
+            await update_account(data)
+            logger.info(f"{account.nickname}视频号cookie自动刷新成功！")
+    except Exception as e:
+        raise Exception(f"{account.nickname}视频号cookie更新失败，错误：{e}")

@@ -6,7 +6,7 @@ from utils.comm import (init_browser, save_qr, update_account, query_expiration_
                         get_code_instance, delete_code_instance)
 import asyncio
 from utils.static import PlatFormType
-from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO
+from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO, DOUYIN_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
 from core.telegram.message import send_message, send_photo, delete_message
@@ -190,3 +190,18 @@ def query_user_info(cookie, res_data, expiration_time):
         "expiration_time": expiration_time
     }
     return data
+
+
+async def refresh_cookie(account):
+    try:
+        async with async_playwright() as playwright:
+            browser, context, page = await init_browser(playwright, account.cookie)
+            await page.goto(DOUYIN_UPLOAD_PAGE)
+            data = await save_cookie(context, nickname=account.nickname, instance=account)
+
+            await context.close()
+            await browser.close()
+            await update_account(data)
+            logger.info(f"{account.nickname}抖音cookie自动刷新成功！")
+    except Exception as e:
+        raise Exception(f"{account.nickname}抖音cookie更新失败，错误：{e}")

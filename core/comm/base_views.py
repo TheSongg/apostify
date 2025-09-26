@@ -120,7 +120,7 @@ class BaseViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'])
     def toggle_task(self, request, *args, **kwargs):
         task_name = request.data.get(
-            "task_name", "core.comm.task.check_and_refresh_cookies"
+            "task_name", "core.comm.task.refresh_cookies"
         )
         interval_hours = request.data.get("interval_hours", os.getenv('COOKIE_INTERVAL_HOURS', 12))
         enabled = str(request.data.get("enabled", "false")).lower() in ("true", "1", "yes")

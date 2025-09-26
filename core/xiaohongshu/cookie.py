@@ -6,7 +6,7 @@ import json
 import asyncio
 from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
-from utils.config import XHS_HOME
+from utils.config import XIAOHONGSHU_HOME, XIAOHONGSHU_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
 from core.telegram.message import send_message, send_photo, delete_message
@@ -23,7 +23,7 @@ async def async_generate_xiaohongshu_cookie(nickname):
             browser, context, page = await init_browser(playwright)
 
             # 打开主页
-            await page.goto(XHS_HOME)
+            await page.goto(XIAOHONGSHU_HOME)
 
             # 生成二维码
             src = await _generate_qr(page)
@@ -87,7 +87,7 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
     except PlaywrightTimeoutError:
         logger.error("登录超时或二维码未被扫描！")
         img_bytes = await page.screenshot(full_page=True)
-        await send_photo(img_bytes, caption='登录超时或二维码未被扫描！', auto_delete=None)
+        await send_photo(img_bytes, caption='登录超时或二维码未被扫描！')
         raise Exception("登录超时或二维码未被扫描！")
 
 
@@ -135,3 +135,17 @@ def query_user_info(cookie):
     except Exception as e:
         raise Exception(f'查询user_info异常，错误：{str(e)}')
 
+
+async def refresh_cookie(account):
+    try:
+        async with async_playwright() as playwright:
+            browser, context, page = await init_browser(playwright, account.cookie)
+            await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
+            data = await save_cookie(context, nickname=account.nickname, instance=account)
+
+            await context.close()
+            await browser.close()
+            await update_account(data)
+            logger.info(f"{account.nickname}小红书cookie自动刷新成功！")
+    except Exception as e:
+        raise Exception(f"{account.nickname}小红书cookie更新失败，错误：{e}")

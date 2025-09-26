@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
 from .cookie import save_cookie
-from utils.config import XHS_VIDEO_PAGE, XHS_VIDEO_SCHEDULED_RELEASE_PAGE
+from utils.config import XIAOHONGSHU_UPLOAD_PAGE, XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -22,8 +22,8 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
     browser, context, page = await init_browser(playwright, account.cookie)
 
-    await page.goto(XHS_VIDEO_PAGE)
-    await page.wait_for_url(XHS_VIDEO_PAGE)
+    await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
+    await page.wait_for_url(XIAOHONGSHU_UPLOAD_PAGE)
 
     await _upload_video_file(page, file_path)
     await asyncio.sleep(0.5)
@@ -109,7 +109,7 @@ async def _release_video(page):
     # 等待包含"定时发布"文本的button元素出现并点击
     await page.locator('button:has-text("发布")').click()
     await page.wait_for_url(
-        XHS_VIDEO_SCHEDULED_RELEASE_PAGE,
+        XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE,
         timeout=int(os.getenv('DEFAULT_TIMEOUT', 120000))
     )  # 如果自动跳转到作品页面，则代表发布成功
 
