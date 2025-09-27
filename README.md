@@ -42,7 +42,7 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
 - linux 系统（配置 >= 2C2G）
 - Docker
 - Telegram Bot Token
-- 目标平台（如 YouTube、抖音）的 账号（用于扫码登录）
+- 目标平台（如 YouTube、抖音、小红书）的 账号
 
 ### 安装步骤
 
@@ -53,39 +53,50 @@ Apostify 旨在简化内容创作与发布的复杂流程，为内容创作者�
    ```
 
 2. **配置环境变量**
-   修改 `apostify/docker/`目录下 `.env` 文件里的以下配置：
+   修改 `apostify/docker/` 目录下 `.env` 文件里的以下配置。
    
-   | 参数名称                      | 说明                          | 默认值                  | 是否必须修改默认值 |
-   |---------------------------|-----------------------------|----------------------|-----------|
-   | X-API-KEY                 | 接口鉴权key                     | your_key             | 是         |
-   | TG_BOT_TOKEN              | Telegram 机器人 Token          | N/A                  | 是         |
-   | CHAT_ID                   | Telegram 目标聊天 ID            | N/A                  | 是         |
-   | N8N_PROTOCOL              | n8n 服务协议（必须https）           | https                | 否         |
-   | N8N_HOST                  | n8n 域名                      | N/A                  | 是         |
-   | N8N_EDITOR_BASE_URL       | n8n 访问 URL                  | https://{N8N_HOST}   | 是         |
-   | WEBHOOK_URL               | n8n Webhook 基础 URL          | https://{N8N_HOST}   | 是         |
-   | N8N_ENDPOINT_WEBHOOK      | n8n Webhook 接口路径            | webhook              | 否         |
-   | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径          | webhook-test         | 否         |
-   | N8N_DEFAULT_LOCALE        | n8n 默认语言/区域                 | zh-CN                | 否         |
-   | PLAYWRIGHT_PORT           | Playwright 浏览器调试端口          | 9222                 | 否         |
-   | CHROME_DRIVER             | Playwright 浏览器 WebSocket 地址 | ws://playwright:9222 | 否         |
-   | HEADLESS                  | 浏览器是否无头模式                   | False                | 否         |
-   | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔               | 60                   | 否         |
-   | COOKIE_PERIOD             | Cookie 自动刷新周期               | minutes              | 否         |
-   | DEFAULT_TIMEOUT           | 页面加载超时时间（毫秒）                | 120000               | 否         |
-   | COOKIE_MAX_WAIT           | 等待用户扫码获取 Cookie 最大时间（秒）     | 180                  | 否         |
-   | MAX_RETRIES               | 上传重试次数                      | 3                    | 否         |
-   | APOSTITFY_PORT            | 后端服务端口                      | 8000                 | 否         |
-   | POSTGRES_USER             | PostgreSQL 超级用户             | your_user            | 是         |
-   | POSTGRES_PASSWORD         | PostgreSQL 超级用户密码           | your_passwd          | 是         |
-   | POSTGRES_DB               | PostgreSQL 默认数据库名称          | progres              | 否         |
-   | POSTGRES_POST             | PostgreSQL 端口号              | 5432                 | 否         |
-   | POSTGRES_APOSTIFY_DB      | Apostify 服务使用的数据库名称         | apostify             | 否         |
-   | POSTGRES_N8N_DB           | n8n 服务使用的数据库名称              | n8n                  | 否         |
-   | REDIS_PASSWORD            | Redis 密码                    | your_passwd          | 是         |
-   | REDIS_PORT                | Redis 端口号                   | 6379                 | 否         |
-   | GENERIC_TIMEZONE          | 系统通用时区                      | Asia/Shanghai        | 否         |
-   | TZ                        | 容器/系统时区环境变量                 | Asia/Shanghai        | 否         |
+   以下为必须**修改**的参数：  
+   
+   | 参数名称                | 说明                 | 默认值                |
+   |---------------------|--------------------|--------------------|
+   | X-API-KEY           | 接口鉴权 key           | your_key           |
+   | TG_BOT_TOKEN        | Telegram 机器人 Token | N/A                |
+   | CHAT_ID             | Telegram 目标聊天 ID   | N/A                |
+   | N8N_HOST            | n8n 域名             | N/A                |
+   | N8N_EDITOR_BASE_URL | n8n 访问 URL         | https://{N8N_HOST} |
+   | WEBHOOK_URL         | n8n Webhook 基础 URL | https://{N8N_HOST} |
+   | POSTGRES_USER       | PostgreSQL 超级用户    | your_user          |
+   | POSTGRES_PASSWORD   | PostgreSQL 超级用户密码  | your_passwd        |
+   | REDIS_PASSWORD      | Redis 密码           | your_passwd        |
+
+   <details>
+      <summary>非必须修改的参数</summary>
+
+   | 参数名称                      | 说明                          | 默认值                  |
+   |---------------------------|-----------------------------|----------------------|
+   | N8N_PROTOCOL              | n8n 服务协议（必须 https）          | https                |
+   | N8N_ENDPOINT_WEBHOOK      | n8n Webhook 接口路径            | webhook              |
+   | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径          | webhook-test         |
+   | N8N_DEFAULT_LOCALE        | n8n 默认语言/区域                 | zh-CN                |
+   | PLAYWRIGHT_PORT           | Playwright 浏览器调试端口          | 9222                 |
+   | CHROME_DRIVER             | Playwright 浏览器 WebSocket 地址 | ws://playwright:9222 |
+   | HEADLESS                  | 浏览器是否无头模式                   | False                |
+   | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔               | 12                   |
+   | COOKIE_PERIOD             | Cookie 自动刷新周期               | hours                |
+   | DEFAULT_TIMEOUT           | 页面加载超时时间（毫秒）                | 120000               |
+   | COOKIE_MAX_WAIT           | 等待用户扫码获取 Cookie 最大时间（秒）     | 180                  |
+   | MAX_RETRIES               | 上传重试次数                      | 3                    |
+   | APOSTITFY_PORT            | 后端服务端口                      | 8000                 |
+   | POSTGRES_DB               | PostgreSQL 默认数据库名称          | progres              |
+   | POSTGRES_POST             | PostgreSQL 端口号              | 5432                 |
+   | POSTGRES_APOSTIFY_DB      | Apostify 服务使用的数据库名称         | apostify             |
+   | POSTGRES_N8N_DB           | n8n 服务使用的数据库名称              | n8n                  |
+   | REDIS_PORT                | Redis 端口号                   | 6379                 |
+   | GENERIC_TIMEZONE          | 系统通用时区                      | Asia/Shanghai        |
+   | TZ                        | 容器/系统时区环境变量                 | Asia/Shanghai        |
+   
+   </details>
+
 
 3. **启动项目**
     进入 `apostify/docker/` 目录，执行以下命令启动项目：

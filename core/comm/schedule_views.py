@@ -20,7 +20,7 @@ class ScheduleViewSet(BaseViewSet):
         task_name = request.data.get(
             "task_name", "core.comm.task.refresh_cookies"
         )
-        interval_time = request.data.get("interval_time", os.getenv('COOKIE_INTERVAL_TIME', 60))
+        interval_time = request.data.get("interval_time", os.getenv('COOKIE_INTERVAL_TIME', 12))
         enabled = str(request.data.get("enabled", "false")).lower() in ("true", "1", "yes")
         period = request.data.get("period", os.getenv('COOKIE_PERIOD', IntervalSchedule.HOURS))
 
