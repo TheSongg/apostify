@@ -172,7 +172,7 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
             logger.debug(f"移除监听失败: {e}")
 
 
-async def refresh_cookie(account):
+async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
             browser, context, page = await init_browser(playwright, account.cookie)

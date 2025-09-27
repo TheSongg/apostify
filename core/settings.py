@@ -19,7 +19,13 @@ load_dotenv(os.path.join(os.getcwd(), 'docker', '.env'))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-WHITELIST_URL = [{"method": "GET", "url": "/comm/test/"}]
+WHITELIST_URL = [
+    {"method": "GET", "url": "/comm/test/"},
+                 ]
+
+CUSTOM_URL = [
+    {"method": "GET", "url": "/comm/fill_code/"},
+                 ]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/

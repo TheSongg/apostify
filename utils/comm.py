@@ -129,7 +129,7 @@ async def save_qr(src, path_name):
 
 @sync_to_async
 def update_account(data):
-    instance = Account.objects.filter(account_id=data.get('account_id', ''), nickname=data.get('nickname')).first()
+    instance = Account.objects.filter(platform_type=data.get('platform_type', ''), phone=data.get('phone')).first()
     if not instance:
         serializer = AccountSerializer(data=data)
     else:
@@ -189,3 +189,8 @@ def get_http_head_parm(request, param):
         return unquote(request.META.get(param))
     except Exception:
         return ''
+
+
+@sync_to_async
+def query_account(platform_type, phone):
+    return Account.objects.filter(platform_type=platform_type, phone=phone).first()

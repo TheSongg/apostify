@@ -193,7 +193,7 @@ def query_user_info(cookie, res_data, expiration_time):
     return data
 
 
-async def refresh_cookie(account):
+async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
             browser, context, page = await init_browser(playwright, account.cookie)

@@ -35,11 +35,6 @@ class AccountViewSet(BaseViewSet):
             if value:
                 filter_q &= Q(**{key: value})
 
-        # 特殊字段处理
-        expiration_time = params.get("expiration_time")
-        if expiration_time:
-            filter_q &= Q(expiration_time__gt=int(expiration_time))
-
         return queryset.filter(filter_q)
 
     @action(detail=False, methods=['post'])

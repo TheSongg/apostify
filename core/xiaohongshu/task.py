@@ -6,7 +6,7 @@ from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
-from .cookie import save_cookie
+from .cookie import get_cookie
 from utils.config import XIAOHONGSHU_UPLOAD_PAGE, XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE
 
 
@@ -132,7 +132,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
-            data = await save_cookie(context, instance=account, nickname=nickname)
+            data = await get_cookie(context, account.phone)
             await update_account(data)
 
     except Exception as e:

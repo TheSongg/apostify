@@ -14,7 +14,7 @@ class Account(models.Model):
     phone = models.CharField(max_length=20, null=True, blank=True)
     email = models.CharField(max_length=50, null=True, blank=True)
     cookie = models.JSONField(default=list, encoder=DjangoJSONEncoder)
-    expiration_time = models.IntegerField(default=0, null=True, blank=True)
+    is_expired = models.BooleanField(default=False)
     create_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
     is_available = models.BooleanField(default=True)

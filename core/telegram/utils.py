@@ -26,7 +26,7 @@ def pad_string(s, width):
 
 @sync_to_async
 def account_list_html_table():
-    headers = ["序号", "平台", "昵称", "cookie过期时间"]
+    headers = ["序号", "平台", "昵称", "cookie是否有效"]
     account_list = []
     accounts = Account.objects.all()
     serializer = AccountSerializer(accounts, many=True)
@@ -35,7 +35,7 @@ def account_list_html_table():
             {
                 "platfrom": PLATFORM_TYPE_CHOICES[instance["platform_type"]]["zh"],
                 "nickname": instance["nickname"],
-                "expiration_time": instance["expiration_time"]
+                "is_expired": "是" if instance["is_expired"] else "否",
             }
         )
 

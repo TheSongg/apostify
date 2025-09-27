@@ -17,11 +17,6 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         res = super().to_representation(instance)
-        if res['expiration_time']:
-            utc_dt = datetime.fromtimestamp(res["expiration_time"], tz=timezone.utc)
-            shanghai_dt = utc_dt.astimezone(timezone(timedelta(hours=8)))
-            res["expiration_time"] = shanghai_dt.strftime("%Y-%m-%d %H:%M:%S")
-
         if self.context.get("view") and self.context["view"].action in ["list_accounts"]:
             if res["platform_type"]:
                 res["platform_type"] = {
@@ -36,15 +31,15 @@ class AccountSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
         fields = super().get_fields()
-        default_fields = ["id", "platform_type", "nickname", "expiration_time", "is_available", "cookie", "phone",
+        default_fields = ["id", "platform_type", "nickname", "is_available", "cookie", "phone", "is_expired",
                           "account_id", "verification_code", "create_time", "update_time", "email"]
 
         if "view" in self.context and "request" in self.context:
             if self.context.get("view") and self.context["view"].action == "list_accounts":
-                default_fields = ["id", "platform_type", "nickname", "expiration_time", "is_available"]
+                default_fields = ["id", "platform_type", "nickname", "is_available", "is_expired"]
 
             if self.context.get("view") and self.context["view"].action == "account_detail":
-                default_fields = ["id", "platform_type", "nickname", "expiration_time", "is_available",
+                default_fields = ["id", "platform_type", "nickname", "is_available", "is_expired",
                                   "phone", "account_id", "create_time", "update_time", "email"]
         return {field: fields[field] for field in default_fields if field in fields}
 

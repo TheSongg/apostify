@@ -1,6 +1,7 @@
 from rest_framework import viewsets
 import os
 import pytz
+import re
 from .serializers import VideosSerializer
 from django.db import transaction
 import logging
@@ -130,4 +131,23 @@ class BaseViewSet(viewsets.ModelViewSet):
             for instance in old_instances:
                 instance.delete()
         VerificationCode.objects.create(code=code.strip())
+        return Response({"status": "success"})
+
+
+    @action(detail=False, methods=['get'])
+    def fill_code(self, request, *args, **kwargs):
+        text = self.request.GET.get('text')
+        if not text:
+            raise Exception("文本不能为空！")
+
+        pattern = r"\b(\d{6}|\d{4})\b"
+        matches = re.findall(pattern, text)
+        if not matches:
+            raise Exception("文本内容异常，未检测到验证码！")
+
+        old_instances = VerificationCode.objects.all()
+        if old_instances:
+            for instance in old_instances:
+                instance.delete()
+        VerificationCode.objects.create(code=str(matches[0]).strip())
         return Response({"status": "success"})
