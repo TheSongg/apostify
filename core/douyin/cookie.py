@@ -1,9 +1,10 @@
 import logging
 from playwright.async_api import async_playwright
 import os
+import sys
 from core.comm.serializers import AccountSerializer
-from utils.comm import (init_browser, save_qr, update_account, query_expiration_time,
-                        get_code_instance, delete_code_instance)
+from utils.comm import (init_browser, update_account, query_expiration_time,
+                        get_code_instance, delete_code_instance, get_tracks)
 import asyncio
 from utils.static import PlatFormType
 from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO, DOUYIN_UPLOAD_PAGE
@@ -11,52 +12,43 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
 from core.telegram.message import send_message, send_photo, delete_message
 from asgiref.sync import sync_to_async
+from utils.slider import Slider
 
 
 logger = logging.getLogger("douyin")
 
 
-async def async_generate_douyin_cookie(nickname):
-    gen_cookie, qr_img_path, msg, message = True, None, 'init', None
+async def async_generate_douyin_cookie(login_phone):
+    gen_cookie, msg = True, 'init'
     try:
-        async with async_playwright() as playwright:
-            # 初始化浏览器
-            browser, context, page = await init_browser(playwright)
-
-            # 打开主页
-            await page.goto(DOUYIN_HOME)
-
-            # 生成二维码
-            src = await _generate_qr(page)
-            qr_img_path = await save_qr(src, 'douyin')
-
-            message = await send_photo(qr_img_path, caption='请扫描二维码登陆抖音！<i>这条消息会在1分钟后删除~</i>')
-
-            # 等待扫码登录
-            await _wait_for_login(page)
-
-            # 保存 cookie
-            data = await save_cookie(context, nickname, page=page)
-
-            await context.close()
-            await browser.close()
-            await update_account(data)
-            msg = f"{nickname}抖音账号Cookie更新成功~" if nickname not in [None, '','None'] \
-                else f"新增{data['nickname']}抖音账号Cookie成功~"
+        await generate_cookie(login_phone)
     except Exception as e:
         gen_cookie =False
-        msg = f"{nickname}抖音Cookie更新失败，错误：{e}" if nickname not in [None, '', 'None'] \
-            else f"新增抖音Cookie失败，错误：{e}"
+        msg = f"{login_phone}抖音Cookie更新失败，错误：{e}"
         logger.error(msg)
     finally:
-        if message is not None:
-            await delete_message(message)
         msg_bot = await send_message(msg)
-        if qr_img_path is not None:
-            await asyncio.to_thread(os.remove, qr_img_path)
         if gen_cookie:
             await delete_message(msg_bot)
             await send_message(await account_list_html_table(), reply_markup=account_list_inline_keyboard())
+
+
+async def generate_cookie(login_phone):
+    async with async_playwright() as playwright:
+        browser, context, page = await init_browser(playwright)
+        await page.goto(DOUYIN_HOME)
+        await login_by_mobile(page, login_phone)
+
+        await _wait_for_login(page)
+
+        # 保存 cookie
+        data = await get_cookie(context, page, login_phone)
+
+        await context.close()
+        await browser.close()
+        await update_account(data)
+        msg = f"{data['nickname']}抖音账号Cookie更新成功~"
+        logger.info(msg)
 
 
 async def _generate_qr(page):
@@ -147,21 +139,22 @@ async def file_in_code(page, max_wait):
     await verify_button.click(force=True)
     await page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000)
 
-async def save_cookie(context, nickname=None, instance=None, page=None):
+
+async def get_cookie(context, page, login_phone):
     """异存 cookie 到数据库"""
     cookie = await context.storage_state()
-    expiration_time = query_expiration_time(cookie)
-    if instance is not None:
-        data = AccountSerializer(instance=instance).data
-        data['expiration_time'] = expiration_time
-        data['cookie'] = cookie
-    else:
-        res_data = await get_user_profile(page)
-        data = query_user_info(cookie, res_data, expiration_time)
-
-    if nickname not in [None, '', 'None']:
-        if nickname != data['nickname']:
-            raise Exception(f'请使用{nickname}账号扫码登录！')
+    res_data = await get_user_profile(page)
+    user_profile = res_data.get('user_profile', {})
+    data = {
+        "platform_type": PlatFormType.douyin.value,
+        "account_id": user_profile.get('unique_id', ''),
+        "nickname": user_profile.get('nick_name', ''),
+        "password": user_profile.get('password', ''),
+        "phone": login_phone,
+        "email": user_profile.get('email', ''),
+        "cookie": cookie,
+        "is_expired": False
+    }
     logger.info(f"{data['nickname']} cookie保存成功")
     return data
 
@@ -193,12 +186,127 @@ def query_user_info(cookie, res_data, expiration_time):
     return data
 
 
+async def login_by_mobile(page, login_phone):
+    await asyncio.sleep(1)
+    mobile_tap_ele = page.locator("xpath=//li[text() = '验证码登录']")
+    await mobile_tap_ele.click()
+    await page.wait_for_selector("xpath=//article[@class='web-login-mobile-code']")
+    mobile_input_ele = page.locator("xpath=//input[@placeholder='手机号']")
+    await mobile_input_ele.fill(login_phone)
+    await asyncio.sleep(0.5)
+    send_sms_code_btn = page.locator("xpath=//span[text() = '获取验证码']")
+    await send_sms_code_btn.click()
+
+    # 检查是否有滑动验证码
+    await check_page_display_slider(page, move_step=10, slider_level="easy")
+    await asyncio.sleep(1)
+    # 删除当前验证码
+    await delete_code_instance()
+    code_instance = await get_code_instance()
+
+    sms_code_input = page.locator("xpath=//input[@placeholder='请输入验证码']")
+    await sms_code_input.fill(code_instance.code)
+    await asyncio.sleep(1)
+
+#  下面代码参考https://github.com/NanmiCoder/MediaCrawler
+async def check_page_display_slider(page, move_step: int = 10, slider_level: str = "easy"):
+    """
+    检查页面是否出现滑动验证码
+    :return:
+    """
+    # 等待滑动验证码的出现
+    back_selector = "#captcha-verify-image"
+    try:
+        await page.wait_for_selector(selector=back_selector, state="visible", timeout=30 * 1000)
+    except PlaywrightTimeoutError:  # 没有滑动验证码，直接返回
+        return
+
+    gap_selector = 'xpath=//*[@id="captcha_container"]/div/div[2]/img[2]'
+    max_slider_try_times = 20
+    slider_verify_success = False
+    while not slider_verify_success:
+        if max_slider_try_times <= 0:
+            sys.exit()
+        try:
+            await move_slider(back_selector, gap_selector, move_step, slider_level)
+            await asyncio.sleep(1)
+
+            # 如果滑块滑动慢了，或者验证失败了，会提示操作过慢，这里点一下刷新按钮
+            page_content = await page.content()
+            if "操作过慢" in page_content or "提示重新操作" in page_content:
+                await page.click(selector="//a[contains(@class, 'secsdk_captcha_refresh')]")
+                continue
+
+            # 滑动成功后，等待滑块消失
+            await page.wait_for_selector(selector=back_selector, state="hidden", timeout=1000)
+            # 如果滑块消失了，说明验证成功了，跳出循环，如果没有消失，说明验证失败了，上面这一行代码会抛出异常被捕获后继续循环滑动验证码
+            slider_verify_success = True
+        except Exception as e:
+            await asyncio.sleep(1)
+            max_slider_try_times -= 1
+            continue
+
+
+async def move_slider(page, back_selector: str, gap_selector: str, move_step: int = 10, slider_level="easy"):
+    """
+    Move the slider to the right to complete the verification
+    :param back_selector: 滑动验证码背景图片的选择器
+    :param gap_selector:  滑动验证码的滑块选择器
+    :param move_step: 是控制单次移动速度的比例是1/10 默认是1 相当于 传入的这个距离不管多远0.1秒钟移动完 越大越慢
+    :param slider_level: 滑块难度 easy hard,分别对应手机验证码的滑块和验证码中间的滑块
+    :return:
+    """
+
+    # get slider background image
+    slider_back_elements = await page.wait_for_selector(
+        selector=back_selector,
+        timeout=1000 * 10,  # wait 10 seconds
+    )
+    slide_back = str(await slider_back_elements.get_property("src"))  # type: ignore
+
+    # get slider gap image
+    gap_elements = await page.wait_for_selector(
+        selector=gap_selector,
+        timeout=1000 * 10,  # wait 10 seconds
+    )
+    gap_src = str(await gap_elements.get_property("src"))  # type: ignore
+
+    # 识别滑块位置
+    slide_app = Slider(gap=gap_src, bg=slide_back)
+    distance = slide_app.discern()
+
+    # 获取移动轨迹
+    tracks = get_tracks(distance, slider_level)
+    new_1 = tracks[-1] - (sum(tracks) - distance)
+    tracks.pop()
+    tracks.append(new_1)
+
+    # 根据轨迹拖拽滑块到指定位置
+    element = await page.query_selector(gap_selector)
+    bounding_box = await element.bounding_box()  # type: ignore
+
+    await page.mouse.move(bounding_box["x"] + bounding_box["width"] / 2,  # type: ignore
+                                       bounding_box["y"] + bounding_box["height"] / 2)  # type: ignore
+    # 这里获取到x坐标中心点位置
+    x = bounding_box["x"] + bounding_box["width"] / 2  # type: ignore
+    # 模拟滑动操作
+    await element.hover()  # type: ignore
+    await page.mouse.down()
+
+    for track in tracks:
+        # 循环鼠标按照轨迹移动
+        # steps 是控制单次移动速度的比例是1/10 默认是1 相当于 传入的这个距离不管多远0.1秒钟移动完 越大越慢
+        await page.mouse.move(x + track, 0, steps=move_step)
+        x += track
+    await page.mouse.up()
+
+
 async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
             browser, context, page = await init_browser(playwright, account.cookie)
             await page.goto(DOUYIN_UPLOAD_PAGE)
-            data = await save_cookie(context, nickname=account.nickname, instance=account)
+            data = await get_cookie(context, page, account.phone)
 
             await context.close()
             await browser.close()

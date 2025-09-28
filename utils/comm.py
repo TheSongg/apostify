@@ -194,3 +194,45 @@ def get_http_head_parm(request, param):
 @sync_to_async
 def query_account(platform_type, phone):
     return Account.objects.filter(platform_type=platform_type, phone=phone).first()
+
+
+def get_track_simple(distance):
+    # 有的检测移动速度的 如果匀速移动会被识别出来，来个简单点的 渐进
+    # distance为传入的总距离
+    # 移动轨迹
+    track = []
+    # 当前位移
+    current = 0
+    # 减速阈值
+    mid = distance * 4 / 5
+    # 计算间隔
+    t = 0.2
+    # 初速度
+    v = 1
+
+    while current < distance:
+        if current < mid:
+            # 加速度为2
+            a = 4
+        else:
+            # 加速度为-2
+            a = -3
+        v0 = v
+        # 当前速度
+        v = v0 + a * t  # type: ignore
+        # 移动距离
+        move = v0 * t + 1 / 2 * a * t * t
+        # 当前位移
+        current += move  # type: ignore
+        # 加入轨迹
+        track.append(round(move))
+    return track
+
+
+def get_tracks(distance: int, level: str = "easy"):
+    if level == "easy":
+        return get_track_simple(distance)
+    else:
+        from . import easing
+        _, tricks = easing.get_tracks(distance, seconds=2, ease_func="ease_out_expo")
+        return tricks

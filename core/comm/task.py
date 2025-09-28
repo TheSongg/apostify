@@ -32,11 +32,10 @@ def get_platform_info_sync(account):
 
 @shared_task
 def refresh_cookies():
-    """Celery 定时任务：并发刷新所有活动的账号 Cookie"""
-
+    """Celery 定时任务：串行刷新所有活动的账号 Cookie"""
     async def async_main():
         queryset = await get_active_accounts_sync()
-        check_tasks = []
+        error = []
 
         for account in queryset:
             platform = await get_platform_info_sync(account)
@@ -45,30 +44,28 @@ def refresh_cookies():
             try:
                 module = importlib.import_module(module_path)
                 check_cookie_func = getattr(module, 'check_cookie')
-                check_tasks.append(check_cookie_func(account))
-            except Exception as e:
-                # 处理导入模块失败的同步错误
-                logger.error(f"导入 {platform['zh']} 模块失败: {e}")
-        results = await asyncio.gather(*check_tasks, return_exceptions=True)
 
-        error = []
-        for i, result in enumerate(results):
-            #  cookie的账号重新登录
-            if isinstance(result, Exception):
-                try:
-                    account = queryset[i]
-                    platform = await get_platform_info_sync(account)
-                    module_path = f'core.{platform["en"]}.cookie'
-                    module = importlib.import_module(module_path)
-                    generate_cookie_func = getattr(module, 'generate_cookie')
-                    await generate_cookie_func(account.phone)
-                except Exception as e:
-                    error.append(f"平台：[{platform['zh']}]，手机号：[{account.phone}]自动刷新cookie异常，错误：{e}")
+                # 串行执行：等待 check_cookie 完成
+                result = await check_cookie_func(account)
+
+                # 重新生成 cookie
+                if isinstance(result, Exception):
+                    try:
+                        generate_cookie_func = getattr(module, 'generate_cookie')
+                        await generate_cookie_func(account.phone)
+                    except Exception as e:
+                        error.append(
+                            f"平台：[{platform['zh']}]，手机号：[{account.phone}] 自动刷新 cookie 异常，错误：{e}"
+                        )
+            except Exception as e:
+                error.append(f"导入 {platform['zh']} 模块失败: {e}")
+            finally:
+                await asyncio.sleep(5)
 
         if error:
             await send_message('\n'.join(error))
 
-    # 主异步函数，阻塞 Celery worker 直到所有并发操作完成
+    # 主异步函数，阻塞 Celery worker 直到所有串行操作完成
     asyncio.run(async_main())
 
 
