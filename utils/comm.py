@@ -6,7 +6,6 @@ from pathlib import Path
 import os
 import base64
 import logging
-import datetime
 from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
@@ -115,14 +114,13 @@ def generate_new_context_args(cookie):
     return args
 
 
-async def save_qr(src, path_name):
+async def save_qr(src, target_dir, dir_name):
     # 保存二维码图片
     _, b64data = src.split(",", 1)
     img_bytes = base64.b64decode(b64data)
-    save_time = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
-    qr_img_path = Path(settings.BASE_DIR / "qr_img" / f"{path_name}_{save_time}.png")
+    qr_img_path = target_dir /  f"{dir_name}.png"
 
-    await asyncio.to_thread(lambda: qr_img_path.parent.mkdir(parents=True, exist_ok=True))
+    await asyncio.to_thread(lambda: target_dir.mkdir(parents=True, exist_ok=True))
     await asyncio.to_thread(lambda: qr_img_path.write_bytes(img_bytes))
     return qr_img_path
 

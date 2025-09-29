@@ -6,7 +6,7 @@ from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
-from .cookie import save_cookie, handle_response
+from .cookie import get_cookie, handle_response
 from utils.config import SHIPINHAO_UPLOAD_PAGE, SHIPINHAO_UPLOAD_SUCCESS_PAGE
 
 
@@ -22,7 +22,7 @@ async def _upload_for_account(playwright, account, file_path, title, tags, categ
     """为单个账号上传视频"""
     browser, context, page = await init_browser(playwright, account.cookie)
 
-    auth_data_list = await handle_response(page)
+    auth_data = await handle_response(page)
 
     await page.goto(SHIPINHAO_UPLOAD_PAGE)
     await page.wait_for_url(SHIPINHAO_UPLOAD_PAGE)
@@ -42,7 +42,7 @@ async def _upload_for_account(playwright, account, file_path, title, tags, categ
     await _release_video(page)
     await asyncio.sleep(0.5)
 
-    return browser, context, auth_data_list[-1] if auth_data_list else None
+    return browser, context, auth_data
 
 
 async def _upload_video_file(page, file_path,
@@ -157,14 +157,14 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
     try:
         async with async_playwright() as playwright:
 
-            browser, context, auth_data_list = await _upload_for_account(playwright,
+            browser, context, auth_data = await _upload_for_account(playwright,
                                                                          account, file_path,
                                                                          title, tags, category)
 
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
-            data = await save_cookie(context, instance=account, nickname=nickname, auth_data_list=auth_data_list)
+            data = await get_cookie(context, account.phone, auth_data)
             await update_account(data)
 
     except Exception as e:

@@ -1,62 +1,44 @@
 import logging
 from playwright.async_api import async_playwright
 import os
-from utils.comm import init_browser, save_qr, update_account, query_expiration_time
+import shutil
+from pathlib import Path
+from utils.comm import init_browser, save_qr, update_account
 import asyncio
-from core.comm.serializers import AccountSerializer
 from utils.static import PlatFormType
 from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO, SHIPINHAO_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
-from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
-from core.telegram.message import send_message, send_photo, delete_message
+from core.telegram.message import send_photo, delete_message
 
 
 logger = logging.getLogger("shipinhao")
 
 
-async def async_generate_shipinhao_cookie(nickname):
-    gen_cookie, qr_img_path, msg, message = True, None, 'init', None
+async def generate_cookie(login_phone):
+    target_dir = Path(settings.BASE_DIR / "qr_img" / "shipinhao")
     try:
         async with async_playwright() as playwright:
-            # 初始化浏览器
             browser, context, page = await init_browser(playwright)
-
-            # 打开主页
             await page.goto(SHIPINHAO_HOME)
-
-            # 生成二维码
             src = await _generate_qr(page)
-            qr_img_path = await save_qr(src, 'shipinhao')
+            qr_img_path = await save_qr(src, target_dir, 'shipinhao')
 
             message = await send_photo(qr_img_path, caption='请扫描二维码登陆视频号！<i>这条消息会在1分钟后删除~</i>')
-
-            # 等待扫码登录
             auth_data = await _wait_for_login(page)
-
-            # 保存 cookie
-            data = await save_cookie(context, nickname, auth_data=auth_data)
+            data = await get_cookie(context, login_phone, auth_data)
 
             await context.close()
             await browser.close()
             await update_account(data)
-            logger.info("登录二维码保存成功！")
-            msg = f"{nickname}视频号账号Cookie更新成功~" if nickname not in [None, '', 'None'] \
-                else f"新增{data['nickname']}视频号账号Cookie成功~"
+            msg = f"{data['nickname']}视频号账号Cookie更新成功~"
+            logger.info(msg)
     except Exception as e:
-        gen_cookie =False
-        logger.error(e)
-        msg = f"{nickname}视频号Cookie更新失败，错误：{e}" if nickname not in [None, '', 'None'] \
-            else f"新增视频号Cookie失败，错误：{e}"
+        raise Exception(e)
     finally:
+        await asyncio.to_thread(shutil.rmtree, target_dir, ignore_errors=True)
         if message is not None:
             await delete_message(message)
-        msg_bot = await send_message(msg)
-        if qr_img_path is not None:
-            await asyncio.to_thread(os.remove, qr_img_path)
-        if gen_cookie:
-            await delete_message(msg_bot)
-            await send_message(await account_list_html_table(), reply_markup=account_list_inline_keyboard())
-        
+
 
 async def _generate_qr(page):
     try:
@@ -96,29 +78,8 @@ async def _wait_for_login(page):
         raise Exception(f"登录异常，错误：{e}")
 
 
-async def save_cookie(context, nickname=None, instance=None, auth_data=dict):
-    """异存 cookie 到数据库"""
-    try:
-        cookie = await context.storage_state()
-        expiration_time = query_expiration_time(cookie)
-        if instance is not None:
-            data = AccountSerializer(instance=instance).data
-            data['expiration_time'] = expiration_time
-            data['cookie'] = cookie
-        else:
-            data = await get_user_profile(auth_data, cookie, expiration_time)
-
-        if nickname not in [None, '', 'None']:
-            if nickname != data['nickname']:
-                raise Exception(f'请使用{nickname}账号扫码登录！')
-        logger.info(f"{data['nickname']} cookie保存成功")
-        return data
-    except Exception as e:
-        raise Exception(f"保存token异常，错误：{e}")
-
-
-async def get_user_profile(auth_data, cookie, expiration_time):
-    """使用保存的登录态获取用户昵称"""
+async def get_cookie(context, login_phone, auth_data):
+    cookie = await context.storage_state()
     _data = auth_data.get('data', {})
     finder_user = _data.get('finderUser', {})
     data = {
@@ -126,11 +87,12 @@ async def get_user_profile(auth_data, cookie, expiration_time):
         "account_id": finder_user.get('uniqId', ''),
         "nickname": finder_user.get('nickname', ''),
         "password": finder_user.get('password', ''),
-        "phone": finder_user.get('mobile', ''),
+        "phone": login_phone,
         "email": finder_user.get('email', ''),
         "cookie": cookie,
-        "expiration_time": expiration_time
+        "is_expired": False
     }
+    logger.info(f"{data['nickname']} cookie保存成功")
     return data
 
 
@@ -177,11 +139,7 @@ async def check_cookie(account):
         async with async_playwright() as playwright:
             browser, context, page = await init_browser(playwright, account.cookie)
             await page.goto(SHIPINHAO_UPLOAD_PAGE)
-            data = await save_cookie(context, nickname=account.nickname, instance=account)
-
-            await context.close()
-            await browser.close()
-            await update_account(data)
+            await page.wait_for_selector("span:has-text('发表')")
             logger.info(f"{account.nickname}视频号cookie自动刷新成功！")
     except Exception as e:
         raise Exception(f"{account.nickname}视频号cookie更新失败，错误：{e}")

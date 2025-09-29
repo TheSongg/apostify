@@ -7,26 +7,10 @@ import asyncio
 from utils.static import PlatFormType
 from utils.config import XIAOHONGSHU_HOME, XIAOHONGSHU_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
-from core.telegram.utils import account_list_html_table, account_list_inline_keyboard
-from core.telegram.message import send_message, send_photo, delete_message
+from core.telegram.message import send_photo
 
 
 logger = logging.getLogger("xiaohongshu")
-
-
-async def async_generate_xiaohongshu_cookie(login_phone):
-    gen_cookie, msg = True, 'init'
-    try:
-        await generate_cookie(login_phone)
-    except Exception as e:
-        gen_cookie =False
-        msg = f"{login_phone}小红书Cookie更新失败，错误：{e}"
-        logger.error(msg)
-    finally:
-        msg_bot = await send_message(msg)
-        if gen_cookie:
-            await delete_message(msg_bot)
-            await send_message(await account_list_html_table(), reply_markup=account_list_inline_keyboard())
 
 
 async def generate_cookie(login_phone):
