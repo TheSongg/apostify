@@ -9,13 +9,15 @@ RUN pip install --no-cache-dir playwright
 RUN playwright install --with-deps chromium
 
 
-FROM python:3.11-slim AS apostify-base
+FROM python:latest AS apostify-base
 
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     postgresql-client \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./requirements.txt

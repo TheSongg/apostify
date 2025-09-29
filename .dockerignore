@@ -15,7 +15,6 @@ static
 .vscode
 .direnv
 db.sqlite3
-migrations/
 profile/
 myenv/
 diskCache
