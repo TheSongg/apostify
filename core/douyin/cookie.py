@@ -2,8 +2,7 @@ import logging
 from playwright.async_api import async_playwright
 import os
 import sys
-from core.comm.serializers import AccountSerializer
-from utils.comm import (init_browser, update_account, query_expiration_time,
+from utils.comm import (init_browser, update_account,
                         get_code_instance, delete_code_instance, get_tracks)
 import asyncio
 from utils.static import PlatFormType
