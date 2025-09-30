@@ -15,7 +15,7 @@ class CookieViewSet(BaseViewSet):
         login_phone = request.data.get('phone', None)
         platform_type = int(request.data.get('platform_type', 0))
         if not login_phone:
-            raise APException('手机号输入错误！')
+            raise APException('手机号或邮箱输入错误！')
 
         if platform_type not in PLATFORM_TYPE_CHOICES:
             raise APException('平台类型错误！')
