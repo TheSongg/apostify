@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
 from core.comm.models import Videos, Account
 from core.comm.serializers import VideosSerializer
-import time
+from core.users.exception import APException
 import os
 from django.conf import settings
 from .task import upload_videos
@@ -29,11 +29,11 @@ class VideoViewSet(BaseViewSet):
         category = request.data.get("category", None)
 
         if not video_name:
-            raise Exception('视频名称不能为空！')
+            raise APException('视频名称不能为空！')
 
         instance = self.queryset.filter(name=video_name).first()
         if not instance:
-            raise Exception(f'视频{video_name}不存在！')
+            raise APException(f'视频{video_name}不存在！')
 
         account = Account.objects.filter(
             platform_type=self.platform_type,
@@ -41,7 +41,7 @@ class VideoViewSet(BaseViewSet):
             nickname=nickname
         )
         if not account.exists():
-            raise Exception('该视频号账号不可用，请先添加账号并生成Cookie！')
+            raise APException('该视频号账号不可用，请先添加账号并生成Cookie！')
 
         month_dir_str = instance.upload_time.astimezone(
             pytz.timezone(settings.TIME_ZONE)

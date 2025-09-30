@@ -1,36 +1,42 @@
-import logging
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
 from .task import generate_cookie
-from utils.static import PlatFormType
-
-
-logger = logging.getLogger(__name__)
+from utils.static import PLATFORM_TYPE_CHOICES
+from core.comm.models import VerificationCode
+import re
+from core.users.exception import APException
 
 
 class CookieViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'])
-    def generate_xiaohongshu_cookie(self, request):
+    def generate_cookie(self, request):
         login_phone = request.data.get('phone', None)
+        platform_type = int(request.data.get('platform_type', 0))
         if not login_phone:
-            raise Exception('手机号输入错误！')
-        generate_cookie.delay(login_phone, PlatFormType.xiaohongshu.value)
+            raise APException('手机号输入错误！')
+
+        if platform_type not in PLATFORM_TYPE_CHOICES:
+            raise APException('平台类型错误！')
+        generate_cookie.delay(login_phone, platform_type)
         return Response("后台执行中~")
 
-    @action(detail=False, methods=['post'])
-    def generate_douyin_cookie(self, request):
-        login_phone = request.data.get('phone', None)
-        if not login_phone:
-            raise Exception('手机号输入错误！')
-        generate_cookie.delay(login_phone, PlatFormType.douyin.value)
-        return Response("后台执行中~")
 
-    @action(detail=False, methods=['post'])
-    def generate_shipinhao_cookie(self, request):
-        login_phone = request.data.get('phone', None)
-        if not login_phone:
-            raise Exception('手机号输入错误！')
-        generate_cookie.delay(login_phone, PlatFormType.shipinhao.value)
-        return Response("后台执行中~")
+    @action(detail=False, methods=['get'])
+    def fill_in_code(self, request, *args, **kwargs):
+        text = self.request.GET.get('text')
+        if not text:
+            raise APException("文本不能为空！")
+
+        pattern = r"\b(\d{6}|\d{4})\b"
+        matches = re.findall(pattern, text)
+        if not matches:
+            raise APException("文本内容异常，未检测到验证码！")
+
+        old_instances = VerificationCode.objects.all()
+        if old_instances:
+            for instance in old_instances:
+                instance.delete()
+        VerificationCode.objects.create(code=str(matches[0]).strip())
+        return Response({"status": "success"})

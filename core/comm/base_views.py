@@ -1,18 +1,17 @@
 from rest_framework import viewsets
 import os
 import pytz
-import re
 from .serializers import VideosSerializer
 from django.db import transaction
 import logging
 from rest_framework.response import Response
 from django.http import HttpResponse, StreamingHttpResponse
-from utils.comm import json_rsp, json_err_rsp
+from utils.utils import json_rsp, json_err_rsp
 import traceback
 from django.conf import settings
 from rest_framework.decorators import action
 from utils.static import PLATFORM_TYPE_CHOICES
-from core.comm.models import VerificationCode
+from core.users.exception import APException
 
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class BaseViewSet(viewsets.ModelViewSet):
             return instance
         except Exception as e:
             logger.error(traceback.format_exc())
-            raise Exception(f"数据异常！{e}")
+            raise APException(f"数据异常！{e}")
 
 
     def dispatch(self, request, *args, **kwargs):
@@ -84,7 +83,7 @@ class BaseViewSet(viewsets.ModelViewSet):
     def save_videos(self, request, *args, **kwargs):
         video_file = request.FILES.get("video")
         if not video_file:
-            raise Exception("接口中没有待保存的视频文件！")
+            raise APException("接口中没有待保存的视频文件！")
 
         try:
             with transaction.atomic():
@@ -108,7 +107,7 @@ class BaseViewSet(viewsets.ModelViewSet):
                 self.db_save(VideosSerializer, {'name': video_name}, instance)
         except Exception as e:
             transaction.set_rollback(True)
-            raise Exception(f"保存视频失败，错误：{str(e)}")
+            raise APException(f"保存视频失败，错误：{str(e)}")
 
         return Response({"status": "success", "video_name": video_name})
 
@@ -122,32 +121,3 @@ class BaseViewSet(viewsets.ModelViewSet):
     def support_platform(self, request, *args, **kwargs):
         return Response(PLATFORM_TYPE_CHOICES)
 
-
-    @action(detail=False, methods=['post'])
-    def fill_in_code(self, request):
-        code = request.data.get("code", "")
-        old_instances = VerificationCode.objects.all()
-        if old_instances:
-            for instance in old_instances:
-                instance.delete()
-        VerificationCode.objects.create(code=code.strip())
-        return Response({"status": "success"})
-
-
-    @action(detail=False, methods=['get'])
-    def fill_code(self, request, *args, **kwargs):
-        text = self.request.GET.get('text')
-        if not text:
-            raise Exception("文本不能为空！")
-
-        pattern = r"\b(\d{6}|\d{4})\b"
-        matches = re.findall(pattern, text)
-        if not matches:
-            raise Exception("文本内容异常，未检测到验证码！")
-
-        old_instances = VerificationCode.objects.all()
-        if old_instances:
-            for instance in old_instances:
-                instance.delete()
-        VerificationCode.objects.create(code=str(matches[0]).strip())
-        return Response({"status": "success"})

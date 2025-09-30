@@ -7,6 +7,7 @@ from playwright.async_api import async_playwright
 import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
 from .cookie import get_cookie
+from core.users.exception import APException
 from utils.config import XIAOHONGSHU_UPLOAD_PAGE, XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE
 
 
@@ -70,13 +71,13 @@ async def _upload_video_file(page, file_path,
                 # 等待期间未完成，继续轮询
                 await asyncio.sleep(interval)
 
-            raise Exception('上传视频超时！')
+            raise APException('上传视频超时！')
         except Exception as e:
             if attempt < max_retries:
                 logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
                 await asyncio.sleep(2)
             else:
-                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
+                raise APException(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
 
 
 async def _fill_title(page, title):
@@ -137,7 +138,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
     except Exception as e:
         text = f'账号 {nickname} 上传失败，错误：{str(e)}'
-        raise Exception(text)
+        raise APException(text)
     finally:
         await close_browser_context(browser, context)
         await send_message(text)

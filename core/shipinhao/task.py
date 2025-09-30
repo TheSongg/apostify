@@ -8,6 +8,7 @@ import asyncio
 from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
 from .cookie import get_cookie, handle_response
 from utils.config import SHIPINHAO_UPLOAD_PAGE, SHIPINHAO_UPLOAD_SUCCESS_PAGE
+from core.users.exception import APException
 
 
 logger = logging.getLogger("shipinhao")
@@ -61,7 +62,7 @@ async def _upload_video_file(page, file_path,
                 logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
                 await asyncio.sleep(2)
             else:
-                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
+                raise APException(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
 
 
 async def _fill_title(page, title):
@@ -133,7 +134,7 @@ async def detect_upload_status(page,
                 logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
                 await asyncio.sleep(2)
             else:
-                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
+                raise APException(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
 
 
 async def _release_video(page):
@@ -169,7 +170,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
     except Exception as e:
         error_info = f'账号 {nickname} 上传失败，错误：{str(e)}'
-        raise Exception(error_info)
+        raise APException(error_info)
     finally:
         await close_browser_context(browser, context)
 

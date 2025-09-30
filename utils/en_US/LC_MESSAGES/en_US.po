@@ -1,0 +1,296 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ioperation\n"
+"Language: zh_CN\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"X-Generator: Poedit 1.7.7\n"
+
+############################################
+# APP DEBUG [220100000, 220110000)
+msgid "220100000"
+msgstr "Unknown DEBUG Information."
+
+
+
+############################################
+# APP INFO [220110000, 220120000)
+msgid "220110000"
+msgstr "Unknown Information."
+
+msgid "220110001"
+msgstr "Welcome To iStream！"
+
+
+############################################
+# APP WARN [220130000, 220140000)
+msgid "220130000"
+msgstr "Unknown WARN Information."
+
+
+############################################
+# APP ERROR [220150000, 220160000)
+msgid "220150000"
+msgstr "Unknown ERROR Information."
+
+msgid "220150001"
+msgstr "%s"
+
+############################################
+# APP FATAL [220190000, 220199999]
+msgid "220190000"
+msgstr "Unknown FATAL Information.!"
+
+
+############################################
+# USER ERROR [220200000, 220299999]
+msgid "220250000"
+msgstr "Failed to obtain the client ip address!"
+
+msgid "220250001"
+msgstr "Your account is locked!#advice#Try again after %ds!"
+
+msgid "220250002"
+msgstr "Dynamic password is not valid!#advice#Please input the right dynamic password!"
+
+msgid "220250003"
+msgstr "Invalid user name or password!#advice#Please enter your username or password again!"
+
+msgid "220250004"
+msgstr "The current user does not exist in the logged-in list!#advice#Please log in the user again!"
+
+msgid "220250005"
+msgstr "The current user login information does not exist in the logged-in list!#advice#Please log in the user again!"
+
+msgid "220250006"
+msgstr "You have not login!#advice#Please login and continue!"
+
+msgid "220250007"
+msgstr "User name and Token are not matched!#advice#Please use the right account!"
+
+msgid "220250008"
+msgstr "User is not authorized to access!#advice#Please use the authorized account!"
+
+msgid "220250009"
+msgstr "User commitment is not signed!#advice#Please re-sign!"
+
+msgid "220250010"
+msgstr "Password changed, please relogin again!#advice#Please fix the errors according to tooltips and try again!"
+
+msgid "220250011"
+msgstr "The online user has been deleted!#advice#Please re-login and continue!"
+
+msgid "220250012"
+msgstr "Your session is not in the database!#advice#Please change account and try again!"
+
+msgid "220250013"
+msgstr "Your login session is expired!#advice#Please re-login and continue!"
+
+msgid "220250014"
+msgstr "Your login session is invalid!#advice#Please re-login and continue!"
+
+msgid "220250015"
+msgstr "User authorition change!#advice#Please re-login and continue!"
+
+msgid "220250016"
+msgstr "Failed to get department staff information!#advice#Please try again!"
+
+msgid "220250017"
+msgstr "Create user unauthorized!#advice#Please login by admin!"
+
+msgid "220250018"
+msgstr "The username to create already exists!#advice#Please change the username!"
+
+msgid "220250019"
+msgstr "Failed to view user list!#advice#Please confirm the user has permission of viewing user list!"
+
+msgid "220250020"
+msgstr "Failed to view all users!#advice#Please confirm the user has permission of viewing users!"
+
+msgid "220250021"
+msgstr "Failed to search users!#advice#Please confirm the user has permission of searching users!"
+
+msgid "220250022"
+msgstr "Failed to add users!#advice#Please confirm the user has permission of adding users!"
+
+msgid "220250023"
+msgstr "Failed to create user!#advice#Please confirm the user has permission of creating user!"
+
+msgid "220250024"
+msgstr "Failed to update users!#advice#Please confirm the user has permission of updating users!"
+
+msgid "220250025"
+msgstr "Failed to delete users!#advice#Please confirm the user has permission of deleting users!"
+
+msgid "220250026"
+msgstr "Failed to search company users!"
+
+msgid "220250027"
+msgstr "Failed to query operation record!#advice#Please confirm the user has permission of querying operation record!"
+
+msgid "220250028"
+msgstr "Failed to export operation record!#advice#Please confirm the user has permission of exporting operation record!"
+
+msgid "220250029"
+msgstr "Failed to sign commitment letter!#advice#Please refresh and try again !"
+
+msgid "220250030"
+msgstr "Not existed of user name or uac token!#advice#Please choose account-login or scan-login!"
+
+msgid "220250031"
+msgstr "The user is first login！#advice#Please choose account-login！"
+
+
+
+msgid "220251000"
+msgstr "System exception, the role's parent node %s information does not exist!"
+
+msgid "220251001"
+msgstr "The role name %s already exists, please rename it!"
+
+msgid "220251002"
+msgstr "System exception, the role %s information does not exist!"
+
+msgid "220251003"
+msgstr "System error, the role %s can`t been deleted!"
+
+msgid "220251004"
+msgstr "Failed to get role!'#advice#Please confirm the user has permission of getting role!"
+
+msgid "220251005"
+msgstr "Failed to view role list!'#advice#Please confirm the user has permission of getting role!"
+
+msgid "220251006"
+msgstr "Failed to view role permissions!'#Padvice#lease confirm the user has permission of getting role!"
+
+msgid "220251007"
+msgstr "Failed to add role!'#advice#Please confirm the user has permission of adding role!"
+
+msgid "220251008"
+msgstr "Failed to update role!'#advice#Please confirm the user has permission of updating role!"
+
+msgid "220251009"
+msgstr "Failed to delete role!'#advice#Please confirm the user has permission of deleting role!"
+
+msgid "220251010"
+msgstr "Failed to get all permissions!'#advice#Please confirm the user has permission of getting all permissions!"
+
+
+### Role Team
+msgid "220251500"
+msgstr "This user does not have the permission to view role teams."
+
+msgid "220251501"
+msgstr "This user does not have the permission to create role teams"
+
+msgid "220251502"
+msgstr "This user does not have the permission to edit role teams"
+
+msgid "220251503"
+msgstr "This user does not have the permission to delete role teams"
+
+
+msgid "220252000"
+msgstr "The mail group %s already exists, please rename it!"
+
+msgid "220252001"
+msgstr "The mail group %s not existed, please choice again!"
+
+msgid "220252002"
+msgstr "Failed to view mail group list!'#advice#Please confirm the user has permission of getting mail group!"
+
+msgid "220252003"
+msgstr "Failed to get mail group!'#advice#Please confirm the user has permission of getting mail group!"
+
+msgid "220252004"
+msgstr "Failed to add mail group!'#advice#Please confirm the user has permission of adding mail group!"
+
+msgid "220252005"
+msgstr "Failed to update mail group!'#advice#Please confirm the user has permission of updating mail group!"
+
+msgid "220252006"
+msgstr "Failed to delete mail group!'#advice#Please confirm the user has permission of deleting mail group!"
+
+msgid "220252007"
+msgstr "Failed to view mail group users!'#advice#Please confirm the user has permission of getting mail group users!"
+
+msgid "220252008"
+msgstr "Failed to search mail group users!'#advice#Please confirm the user has permission of searching mail group users!"
+
+msgid "220252009"
+msgstr "Failed to add mail group users!'#advice#Please confirm the user has permission of adding mail group users!"
+
+msgid "2202520010"
+msgstr "Failed to delete mail group users!'#advice#Please confirm the user has permission of deleting mail group users!"
+
+
+msgid "220253000"
+msgstr "The group %s already exists, please rename it!"
+
+msgid "220253001"
+msgstr "The group %s not existed, please choice again!"
+
+############################################
+# PROJECT ERROR [220350000, 220359999]
+msgid "220350001"
+msgstr "The param is invalid!#advice#Please check whether the param is valid!"
+
+msgid "220350002"
+msgstr "Fail to modify project!#advice#Please sure that the project is not running!"
+
+msgid "220350003"
+msgstr "The project is not existed!#advice#Please sure the project is existed!"
+
+msgid "220350004"
+msgstr "Fail to add project and the the name is existed!#advice#Please sure that the name of project is not existed!"
+
+msgid "220350005"
+msgstr "Fail to add project and user has no permission!#advice#Please sure that user has add permission!"
+
+msgid "220350006"
+msgstr "Fail to delete project and user has no permission!#advice#Please sure that user has delete permission!"
+
+msgid "220350007"
+msgstr "Fail to modify project and user has no permission!#advice#Please sure that user has modify permission!"
+
+msgid "220350008"
+msgstr "Fail to query project and user has no permission!#advice#Please sure that user has query permission!"
+
+msgid "22035009"
+msgstr "Fail to set project status completed!#advice#Please sure that tasks of project has all been completed!"
+
+############################################
+# TASK ERROR [220450000, 220459999]
+msgid "220450000"
+msgstr "%s"
+
+msgid "220450001"
+msgstr "This user does not have this operation 【%s】"
+
+msgid "220450002"
+msgstr "There are submitted tasks in the checked tasks, and batch deletion is not supported. Please confirm!"
+
+##############################################
+# TESTCASE ERROR [220550000, 220559999]
+msgid "220550000"
+msgstr "%s"
+
+msgid "220550001"
+msgstr "Failed to write test case!%s,#advice#Please check whether the test case is valid!"
+
+msgid "220550002"
+msgstr "The number of excel lines exceeds 65535"
+
+msgid "220550003"
+msgstr "The imported data is duplicate%s"
+
+msgid "220550004"
+msgstr "The number is 【%s】 already exists"
+
+msgid "220550005"
+msgstr "TestSuit Name is 【%s】 already exists on the same path"

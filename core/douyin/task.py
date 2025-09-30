@@ -9,6 +9,7 @@ from utils.comm import init_browser, associated_account_and_video, update_accoun
 from .cookie import get_cookie
 from utils.config import (DOUYIN_UPLOAD_PAGE, DOUYIN_UPLOAD_SUCCESS_PAGE_1,
                           DOUYIN_UPLOAD_SUCCESS_PAGE_2, DOUYIN_MANAGE_PAGE)
+from core.users.exception import APException
 
 
 logger = logging.getLogger("douyin")
@@ -39,7 +40,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             await update_account(data)
     except Exception as e:
         text = f'账号 {nickname} 上传失败，错误：{str(e)}'
-        raise Exception(text)
+        raise APException(text)
     finally:
         await close_browser_context(browser, context)
         await send_message(text)
@@ -94,7 +95,7 @@ async def _upload_file(page, file_path,
                 logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
                 await asyncio.sleep(2)
             else:
-                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
+                raise APException(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
 
 
 async def _fill_title_and_tags(page, title, tags):
@@ -140,4 +141,4 @@ async def _publish_video(page, max_retries=int(os.getenv('MAX_RETRIES')), interv
                 logger.warning(f"[-] 上传失败，第 {attempt} 次尝试，错误：{e}，准备重试...")
                 await asyncio.sleep(interval)
             else:
-                raise Exception(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")
+                raise APException(f"上传视频失败，已重试 {max_retries} 次，错误：{e}")

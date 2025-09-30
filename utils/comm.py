@@ -1,5 +1,3 @@
-from django.http import JsonResponse
-from rest_framework import status
 from django.conf import settings
 from asgiref.sync import sync_to_async
 from pathlib import Path
@@ -10,8 +8,8 @@ from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
 import time
-from urllib.parse import unquote
 from core.comm.models import Videos, Account, VerificationCode
+from core.users.exception import APException
 
 
 logger = logging.getLogger(__name__)
@@ -33,39 +31,6 @@ def dict_to_str(data):
         res.append(f"{key}:{value}")
     return ";".join(res)
 
-
-def http_response_data(data, code="", message="", advice=""):
-    return {
-        "code": code,
-        "message": message,
-        "data": data
-    }
-
-
-def json_rsp(data=None, http_status=status.HTTP_200_OK):
-    """
-    正常响应：将参数组装成固定的JSON格式并发送。
-    """
-    response_data = http_response_data(data)
-    response = JsonResponse(response_data, safe=False, status=http_status, json_dumps_params={'ensure_ascii': False})
-    response["Access-Control-Allow-Origin"] = "*"
-    response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-    response["Access-Control-Max-Age"] = "1000"
-    response["Access-Control-Allow-Headers"] = "*"
-    return response
-
-
-def json_err_rsp(exception, http_status=status.HTTP_200_OK):
-    error_code = "0001"
-    error_msg = str(exception)
-    rsp_status = http_status
-    response_data = http_response_data(None, error_code, error_msg)
-    response = JsonResponse(response_data, safe=False, status=rsp_status, json_dumps_params={'ensure_ascii': False})
-    response["Access-Control-Allow-Origin"] = "*"
-    response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
-    response["Access-Control-Max-Age"] = "1000"
-    response["Access-Control-Allow-Headers"] = "*"
-    return response
 
 async def set_init_script(context):
     stealth_js_path = Path(settings.BASE_DIR) / "utils" / "stealth.min.js"
@@ -145,7 +110,7 @@ def query_expiration_time(cookie):
                 expiration_time_list.append(item.get('expires'))
         return int(min(expiration_time_list))
     except Exception as e:
-        raise Exception(f'查询expiration_time异常，错误：{str(e)}')
+        raise APException(f'查询expiration_time异常，错误：{str(e)}')
 
 
 def associated_account_and_video(account, video_name):
@@ -171,7 +136,8 @@ def get_code_instance():
         if code_instance:
             return code_instance
 
-    raise Exception("验证码异常或未收到验证码！")
+    raise APException("验证码异常或未收到验证码！")
+
 
 @sync_to_async
 def delete_code_instance():
@@ -179,14 +145,6 @@ def delete_code_instance():
     if old_instances:
         for instance in old_instances:
             instance.delete()
-
-
-def get_http_head_parm(request, param):
-    try:
-        param = 'HTTP_' + param.upper()
-        return unquote(request.META.get(param))
-    except Exception:
-        return ''
 
 
 @sync_to_async

@@ -8,6 +8,7 @@ from utils.static import PlatFormType
 from utils.config import XIAOHONGSHU_HOME, XIAOHONGSHU_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.message import send_photo
+from core.users.exception import APException
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -46,7 +47,7 @@ async def _generate_qr(page):
     src = await img.get_attribute("src")
     if not (src and src.startswith("data:image")):
         logger.error("未找到登录二维码！")
-        raise Exception("未找到登录二维码！")
+        raise APException("未找到登录二维码！")
 
     return src
 
@@ -63,7 +64,7 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
         logger.error("登录超时！")
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption='登录超时！')
-        raise Exception("登录超时！")
+        raise APException("登录超时！")
 
 
 async def get_cookie(context, login_phone):
@@ -92,13 +93,13 @@ def query_user_info(cookie):
                 user_info = item.get('value')
                 break
         if user_info is None:
-            raise Exception('不存在USER_INFO_FOR_BIZ字段！')
+            raise APException('不存在USER_INFO_FOR_BIZ字段！')
 
         if isinstance(user_info, str):
             user_info = json.loads(user_info)
         return user_info
     except Exception as e:
-        raise Exception(f'查询user_info异常，错误：{str(e)}')
+        raise APException(f'查询user_info异常，错误：{str(e)}')
 
 
 async def login_by_mobile(page, login_phone):
@@ -156,4 +157,4 @@ async def check_cookie(account):
 
     except Exception as e:
         logger.error(f"{account.nickname} cookie过期！错误：{str(e)}")
-        raise Exception(e)
+        raise APException(e)

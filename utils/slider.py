@@ -1,5 +1,5 @@
 import os
-from typing import List
+from core.users.exception import APException
 from urllib.parse import urlparse
 
 import cv2
@@ -51,7 +51,7 @@ class Slider:
                 cv2.imwrite(img_path, image)
                 return img_path
             else:
-                raise Exception(f"保存{img_type}图片失败")
+                raise APException(f"保存{img_type}图片失败")
         else:
             return img
 

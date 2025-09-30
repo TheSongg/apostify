@@ -2,7 +2,8 @@ from rest_framework.authentication import BaseAuthentication
 import logging
 from django.conf import settings
 import os
-from utils.comm import get_http_head_parm
+from utils.utils import get_http_head_parm, set_thread_user_data, get_http_ip
+from core.users.exception import APException
 
 
 logger = logging.getLogger(__name__)
@@ -10,16 +11,20 @@ logger = logging.getLogger(__name__)
 
 class UserAuthentication(BaseAuthentication):
     def authenticate(self, request):
+        language = get_http_head_parm(request._request, 'language')
+        ip = get_http_ip(request._request)
+        set_thread_user_data('', ip, language)
+
         if self.check_request_is_whitelist(request._request, settings.WHITELIST_URL):
             return
         elif self.check_request_is_whitelist(request._request, settings.CUSTOM_URL):
             auth = request._request.GET.get('auth')
             if auth != os.getenv('X_API_KEY'):
-                raise Exception("鉴权失败！")
+                raise APException("鉴权失败！")
         else:
             api_key = get_http_head_parm(request._request, 'X_API_KEY')
             if api_key != os.getenv('X_API_KEY'):
-                raise Exception('鉴权失败！')
+                raise APException('鉴权失败！')
             return
 
     def check_request_is_whitelist(self, request, param) -> bool:

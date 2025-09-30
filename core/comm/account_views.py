@@ -6,6 +6,7 @@ import logging
 from rest_framework.decorators import action
 from django.db.models import Q
 from django.db import transaction
+from core.users.exception import APException
 
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ class AccountViewSet(BaseViewSet):
             nickname=data.get('nickname')
         ).first()
         if not instance:
-            raise Exception("账号不存在，无法更新！")
+            raise APException("账号不存在，无法更新！")
 
         with transaction.atomic():
             updated_instance = self.db_save(self.get_serializer_class(), data, instance)
@@ -56,7 +57,7 @@ class AccountViewSet(BaseViewSet):
     def account_detail(self, request, pk=None, *args, **kwargs):
         queryset = self.queryset.filter(id=pk).first()
         if not queryset:
-            raise Exception(f"不存在该账号:{pk}")
+            raise APException(f"不存在该账号:{pk}")
 
         serializer = self.get_serializer(queryset)
         return Response(serializer.data)

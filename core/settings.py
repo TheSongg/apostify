@@ -24,7 +24,7 @@ WHITELIST_URL = [
                  ]
 
 CUSTOM_URL = [
-    {"method": "GET", "url": "/comm/fill_code/"},
+    {"method": "GET", "url": "/comm/cookie/fill_in_code/"},
                  ]
 
 # Quick-start development settings - unsuitable for production
@@ -158,7 +158,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'zh-hans'
+LANGUAGE_CODE = 'zh'
 
 TIME_ZONE = 'Asia/Shanghai'
 

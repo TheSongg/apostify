@@ -10,6 +10,7 @@ from django.conf import settings
 from .task import upload_videos
 import pytz
 from utils.static import PlatFormType
+from core.users.exception import APException
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -42,11 +43,11 @@ class VideoViewSet(BaseViewSet):
         nickname = request.data.get("nickname")
 
         if not video_name:
-            raise Exception('视频名称不能为空！')
+            raise APException('视频名称不能为空！')
 
         instance = self.queryset.filter(name=video_name).first()
         if not instance:
-            raise Exception(f'视频{video_name}不存在！')
+            raise APException(f'视频{video_name}不存在！')
 
         account = Account.objects.filter(
             platform_type=self.platform_type,
@@ -54,7 +55,7 @@ class VideoViewSet(BaseViewSet):
             nickname=nickname
         )
         if not account.exists():
-            raise Exception('该小红书账号不可用，请先添加账号并生成Cookie！')
+            raise APException('该小红书账号不可用，请先添加账号并生成Cookie！')
 
         month_dir_str = instance.upload_time.astimezone(
             pytz.timezone(settings.TIME_ZONE)

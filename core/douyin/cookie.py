@@ -11,6 +11,7 @@ from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.message import send_message, send_photo
 from asgiref.sync import sync_to_async
 from utils.slider import Slider
+from core.users.exception import APException
 
 
 logger = logging.getLogger("douyin")
@@ -44,7 +45,7 @@ async def _generate_qr(page):
     src = await img.get_attribute("src")
     if not (src and src.startswith("data:image")):
         logger.error("未找到登录二维码！")
-        raise Exception("未找到登录二维码！")
+        raise APException("未找到登录二维码！")
 
     return src
 
@@ -75,18 +76,18 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
             logger.warning("扫码成功，但需要短信验证码！")
             await file_in_code(page, max_wait)
         else:
-            raise Exception("未识别的页面状态！")
+            raise APException("未识别的页面状态！")
 
     except PlaywrightTimeoutError:
         logger.error("登录超时或二维码未被扫描！")
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption="登录超时或二维码未被扫描！")
-        raise Exception("登录超时或二维码未被扫描！")
+        raise APException("登录超时或二维码未被扫描！")
     except Exception as e:
         logger.error(f"登录失败，异常：{e}")
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption=f"登录失败，异常：{e}")
-        raise Exception(e)
+        raise APException(e)
     finally:
         if code_instance is not None:
             await sync_to_async(code_instance.delete)()
@@ -151,7 +152,7 @@ async def get_user_profile(page):
 
         return res_data
     except Exception as e:
-        raise Exception(f'查询抖音昵称信息失败， 错误：{str(e)}')
+        raise APException(f'查询抖音昵称信息失败， 错误：{str(e)}')
 
 
 def query_user_info(cookie, res_data, expiration_time):
@@ -296,4 +297,4 @@ async def check_cookie(account):
             await update_account(data)
             logger.info(f"{account.nickname}抖音cookie自动刷新成功！")
     except Exception as e:
-        raise Exception(f"{account.nickname}抖音cookie更新失败，错误：{e}")
+        raise APException(f"{account.nickname}抖音cookie更新失败，错误：{e}")

@@ -9,6 +9,7 @@ from utils.static import PlatFormType
 from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO, SHIPINHAO_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.message import send_photo, delete_message
+from core.users.exception import APException
 
 
 logger = logging.getLogger("shipinhao")
@@ -33,7 +34,7 @@ async def generate_cookie(login_phone):
             msg = f"{data['nickname']}视频号账号Cookie更新成功~"
             logger.info(msg)
     except Exception as e:
-        raise Exception(e)
+        raise APException(e)
     finally:
         await asyncio.to_thread(shutil.rmtree, target_dir, ignore_errors=True)
         if message is not None:
@@ -52,14 +53,14 @@ async def _generate_qr(page):
         src = await qrcode_img.get_attribute("src")
         if not (src and src.startswith("data:image")):
             logger.error("未找到登录二维码！")
-            raise Exception("未找到登录二维码！")
+            raise APException("未找到登录二维码！")
 
         return src
     except Exception as e:
         logger.error("获取视频号登录二维码异常！")
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption='获取视频号登录二维码异常！')
-        raise Exception(f"获取视频号登录二维码异常！错误：{e}")
+        raise APException(f"获取视频号登录二维码异常！错误：{e}")
 
 
 async def _wait_for_login(page):
@@ -73,9 +74,9 @@ async def _wait_for_login(page):
         logger.error("登录超时或二维码未被扫描！")
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption='登录超时或二维码未被扫描！')
-        raise Exception("登录超时或二维码未被扫描！")
+        raise APException("登录超时或二维码未被扫描！")
     except Exception as e:
-        raise Exception(f"登录异常，错误：{e}")
+        raise APException(f"登录异常，错误：{e}")
 
 
 async def get_cookie(context, login_phone, auth_data):
@@ -125,7 +126,7 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
     except Exception as e:
         img_bytes = await page.screenshot(full_page=True)
         await send_photo(img_bytes, caption='捕获到 auth_data 接口异常！')
-        raise Exception(f"等待用户鉴权信息异常，错误：{e}")
+        raise APException(f"等待用户鉴权信息异常，错误：{e}")
     finally:
         # 移除监听，避免内存泄漏
         try:
@@ -142,4 +143,4 @@ async def check_cookie(account):
             await page.wait_for_selector("span:has-text('发表')")
             logger.info(f"{account.nickname}视频号cookie自动刷新成功！")
     except Exception as e:
-        raise Exception(f"{account.nickname}视频号cookie更新失败，错误：{e}")
+        raise APException(f"{account.nickname}视频号cookie更新失败，错误：{e}")
