@@ -41,9 +41,30 @@ class AccountViewSet(BaseViewSet):
     @action(detail=False, methods=['post'])
     def update_account(self, request, *args, **kwargs):
         data = request.data.copy()
+        platform_type = data.get('platform_type', None)
+        if not platform_type:
+            raise APException(f'无效的platform_type：[{platform_type}]')
+
+        phone = data.get('phone')
+        email = data.get('email')
+        input_data = {
+            'phone': phone,
+            'email': email,
+        }
+
+        filter_q = None
+
+        for field, value in input_data.items():
+            if value:
+                filter_q = Q(**{field: value})
+                break
+
+        if not filter_q:
+            raise APException('至少输入一个：[phone，email]')
+
         instance = self.queryset.filter(
+            filter_q,
             platform_type=data.get("platform_type"),
-            nickname=data.get('nickname')
         ).first()
         if not instance:
             raise APException("账号不存在，无法更新！")

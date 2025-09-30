@@ -4,7 +4,7 @@ from rest_framework.renderers import JSONRenderer
 class BaseResponse(object):
     def __init__(self):
         self.code = "0000"
-        self.message = '请求成功'
+        self.message = 'success'
         self.advice = ''
         self.data = None
 

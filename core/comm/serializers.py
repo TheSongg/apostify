@@ -36,7 +36,8 @@ class AccountSerializer(serializers.ModelSerializer):
 
         if "view" in self.context and "request" in self.context:
             if self.context.get("view") and self.context["view"].action == "list_accounts":
-                default_fields = ["id", "platform_type", "nickname", "is_available", "is_expired"]
+                default_fields = ["id", "platform_type", "nickname", "is_available", "is_expired", "phone",
+                                  "email"]
 
             if self.context.get("view") and self.context["view"].action == "account_detail":
                 default_fields = ["id", "platform_type", "nickname", "is_available", "is_expired",

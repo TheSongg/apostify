@@ -83,7 +83,7 @@ class BaseViewSet(viewsets.ModelViewSet):
     def save_videos(self, request, *args, **kwargs):
         video_file = request.FILES.get("video")
         if not video_file:
-            raise APException("接口中没有待保存的视频文件！")
+            raise APException("没有待保存的视频文件！")
 
         try:
             with transaction.atomic():

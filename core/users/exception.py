@@ -13,6 +13,7 @@ class APException(Exception):
         self.code = code
         self.message = message
         self.status = kwargs.get('status', 500)
+        self.advice = kwargs.get('advice', 500)
         self.err_name = kwargs.get('err_name', None)
         self.strategy = kwargs.get("strategy", None)
 

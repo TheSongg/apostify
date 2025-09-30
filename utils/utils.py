@@ -53,6 +53,7 @@ def http_response_data(data, code="", message="", advice=""):
     return {
         "code": code,
         "message": message,
+        "advice": advice,
         "data": data
     }
 
@@ -74,7 +75,8 @@ def json_err_rsp(exception, http_status=status.HTTP_200_OK):
     error_code = "0001"
     error_msg = str(exception)
     rsp_status = http_status
-    response_data = http_response_data(None, error_code, error_msg)
+    advice_msg = ""
+    response_data = http_response_data(None, error_code, error_msg, advice_msg)
     response = JsonResponse(response_data, safe=False, status=rsp_status, json_dumps_params={'ensure_ascii': False})
     response["Access-Control-Allow-Origin"] = "*"
     response["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
