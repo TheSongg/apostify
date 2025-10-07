@@ -9,7 +9,7 @@ from django.db import transaction
 from core.users.exception import APException
 
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("app")
 
 
 class AccountViewSet(BaseViewSet):

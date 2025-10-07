@@ -9,7 +9,7 @@ from core.users.exception import APException
 import logging
 
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("app")
 
 
 class CookieViewSet(BaseViewSet):

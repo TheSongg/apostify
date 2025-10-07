@@ -79,7 +79,7 @@ def generate_cookie(login_phone, platform_type):
             await generate_cookie_func(login_phone)
         except Exception as e:
             gen_cookie = False
-            msg = f"{login_phone}视频号Cookie更新失败，错误：{e}"
+            msg = f"{login_phone}{platform["zh"]}Cookie更新失败，错误：{e}"
             logger.error(msg)
         finally:
             msg_bot = await send_message(msg)

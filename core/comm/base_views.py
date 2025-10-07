@@ -14,7 +14,7 @@ from utils.static import PLATFORM_TYPE_CHOICES
 from core.users.exception import APException
 
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("app")
 
 
 class BaseViewSet(viewsets.ModelViewSet):

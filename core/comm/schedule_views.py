@@ -8,7 +8,7 @@ from .serializers import PeriodicTaskSerializer
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 
-logger = logging.getLogger("django")
+logger = logging.getLogger("app")
 
 
 class ScheduleViewSet(BaseViewSet):
