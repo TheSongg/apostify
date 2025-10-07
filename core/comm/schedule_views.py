@@ -8,7 +8,7 @@ from .serializers import PeriodicTaskSerializer
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("django")
 
 
 class ScheduleViewSet(BaseViewSet):
@@ -17,6 +17,7 @@ class ScheduleViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'])
     def toggle_task(self, request, *args, **kwargs):
+        logger.info(f'func:toggle_task, param: {request.data}')
         task_name = request.data.get(
             "task_name", "core.comm.task.refresh_cookies"
         )

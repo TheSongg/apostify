@@ -37,6 +37,7 @@ class VideoViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'], url_path='upload')
     def upload(self, request, *args, **kwargs):
+        logger.info(f'func:upload, param: {request.data}')
         title = request.data.get("title", "")
         tags = request.data.get("tags", [])
         video_name = request.data.get("video_name")

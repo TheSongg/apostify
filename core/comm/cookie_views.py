@@ -6,12 +6,17 @@ from utils.static import PLATFORM_TYPE_CHOICES
 from core.comm.models import VerificationCode
 import re
 from core.users.exception import APException
+import logging
+
+
+logger = logging.getLogger("django")
 
 
 class CookieViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'])
     def generate_cookie(self, request):
+        logger.info(f'func:generate_cookie, param: {request.data}')
         login_phone = request.data.get('phone', None)
         platform_type = int(request.data.get('platform_type', 0))
         if not login_phone:
@@ -25,6 +30,7 @@ class CookieViewSet(BaseViewSet):
 
     @action(detail=False, methods=['get'])
     def fill_in_code(self, request, *args, **kwargs):
+        logger.info(f'func:fill_in_code, param: {self.request.GET}')
         text = self.request.GET.get('text')
         if not text:
             raise APException("文本不能为空！")

@@ -9,7 +9,7 @@ from django.db import transaction
 from core.users.exception import APException
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("django")
 
 
 class AccountViewSet(BaseViewSet):
@@ -19,6 +19,7 @@ class AccountViewSet(BaseViewSet):
 
     @action(detail=False, methods=['get'])
     def list_accounts(self, request):
+        logger.info(f'func:list_accounts, param: {request.query_params}')
         queryset = self.apply_filters(self.get_queryset(), request.query_params)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -40,6 +41,7 @@ class AccountViewSet(BaseViewSet):
 
     @action(detail=False, methods=['post'])
     def update_account(self, request, *args, **kwargs):
+        logger.info(f'func:update_account, param: {request.data}')
         data = request.data.copy()
         platform_type = data.get('platform_type', None)
         if not platform_type:
