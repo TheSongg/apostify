@@ -66,8 +66,10 @@ services:
     ports:
       - "${NO_VNC_PORT}:${NO_VNC_PORT}"
       - "${VNC_PORT}:${VNC_PORT}"
+      - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}" 
     environment:
       - VNC_PASSWORD=${VNC_PASSWORD}
+      - PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT}
     shm_size: ${SHM_SIZE}
 
   redis:

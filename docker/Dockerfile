@@ -4,8 +4,13 @@ RUN apt-get update && apt-get install -y \
     curl unzip wget gnupg ca-certificates git \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --no-cache-dir playwright
+
 RUN playwright install --with-deps chromium
 
+ARG VNC_RESOLUTION=1280x800
+ARG VNC_PORT=5901
+ARG NO_VNC_PORT=6901
 
 FROM playwright-base AS playwright-final
 ENV DEBIAN_FRONTEND=noninteractive
@@ -18,9 +23,9 @@ RUN apt-get update && apt-get install -y \
     fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/*
 ENV DISPLAY=:1 \
-    VNC_PORT=5901 \
-    NO_VNC_PORT=6901 \
-    VNC_RESOLUTION=1280x800
+    VNC_PORT=${VNC_PORT} \
+    NO_VNC_PORT=${NO_VNC_PORT} \
+    VNC_RESOLUTION=${VNC_RESOLUTION}
 EXPOSE ${NO_VNC_PORT} ${VNC_PORT}
 COPY vnc_supervisord.conf /etc/supervisor/conf.d/vnc_supervisord.conf
 COPY vnc_web.sh /vnc_web.sh
