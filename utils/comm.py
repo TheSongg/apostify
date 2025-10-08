@@ -3,6 +3,7 @@ from asgiref.sync import sync_to_async
 from pathlib import Path
 import os
 import base64
+import json
 import logging
 from core.comm.serializers import AccountSerializer
 import asyncio
@@ -12,7 +13,7 @@ from core.comm.models import Videos, Account, VerificationCode
 from core.users.exception import APException
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('app')
 
 
 def field_en_to_zh(instance, data):
@@ -42,9 +43,22 @@ async def get_chrome_driver(playwright):
 
     if chrome_driver.startswith('ws://') or \
         chrome_driver.startswith('http://'):
-        # 连接已经运行的 Playwright Server
-        return await playwright.chromium.connect(chrome_driver)
-        # 本地启动浏览器
+        is_headless = os.getenv('HEADLESS') in ['True', True]
+        
+        launch_options = {
+            "headless": is_headless,
+            "args": ["--no-sandbox"] 
+        }
+        
+        connect_headers = {
+            "x-playwright-launch-options": json.dumps(launch_options)
+        }
+        
+        logger.info(f"正在连接到远程服务器，请求模式: headless={is_headless}...")
+        
+        return await playwright.chromium.connect(chrome_driver, headers=connect_headers)
+
+    # 本地启动浏览器
     return await playwright.chromium.launch(
         headless=True if os.getenv('HEADLESS') in ['True', True] else False,
         executable_path=chrome_driver
