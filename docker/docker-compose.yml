@@ -31,7 +31,7 @@ services:
     container_name: n8n
     restart: always
     ports:
-      - "5678:5678"
+      - "${N8N_PORT}:${N8N_PORT}"
     environment:
       - DB_TYPE=postgresdb
       - DB_POSTGRESDB_HOST=postgres
@@ -58,15 +58,17 @@ services:
         condition: service_healthy
 
   playwright:
-    container_name: playwright
     build:
       context: .
-      target: playwright-base
-    image: playwright-image:latest
+      target: playwright-final
+    container_name: playwright
     restart: always
     ports:
-      - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}"
-    command: python -m playwright run-server --host=0.0.0.0 --port=${PLAYWRIGHT_PORT}
+      - "${NO_VNC_PORT}:${NO_VNC_PORT}"
+      - "${VNC_PORT}:${VNC_PORT}"
+    environment:
+      - VNC_PASSWORD=${VNC_PASSWORD}
+    shm_size: ${SHM_SIZE}
 
   redis:
     image: redis:7
