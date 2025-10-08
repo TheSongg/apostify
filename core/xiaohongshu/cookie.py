@@ -108,7 +108,7 @@ async def login_by_mobile(page, login_phone):
         await login(page, login_phone)
     except Exception as e:
         try:
-            logger.warning('loging失败，尝试手动点击登录按钮')
+            logger.warning(f'login失败，尝试手动点击登录按钮，错误：{e}')
             # 进入首页后，有可能不会自动弹出登录框，需要手动点击登录按钮
             login_button_ele = await page.wait_for_selector(
                 selector="xpath=//*[@id='app']/div[1]/div[2]/div[1]/ul/div[1]/button",
