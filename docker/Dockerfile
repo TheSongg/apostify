@@ -22,10 +22,10 @@ ENV DISPLAY=:1 \
     NO_VNC_PORT=6901 \
     VNC_RESOLUTION=1280x800
 EXPOSE ${NO_VNC_PORT} ${VNC_PORT}
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY vnc_supervisord.conf /etc/supervisor/conf.d/vnc_supervisord.conf
 COPY vnc_web.sh /vnc_web.sh
 RUN chmod +x /vnc_web.sh
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/vnc_supervisord.conf"]
 
 
 FROM python:latest AS apostify-base
