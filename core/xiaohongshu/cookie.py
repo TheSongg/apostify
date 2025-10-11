@@ -142,12 +142,13 @@ async def login(page, login_phone):
 
         try:
             qr_code = "img.qrcode-img"
-            if page.locator("img.qrcode-img").is_visible():
-                qr_code_locator = page.locator(qr_code)
-                await qr_code_locator.wait_for(state="visible", timeout=5000)
-                message = await _handle_qr_code(page, qr_code, target_dir)
-                logger.info("重新填充手机号...")
-                await phone_input.fill(login_phone)
+            qr_code_locator = page.locator(qr_code)
+            await qr_code_locator.wait_for(state="visible", timeout=5000)
+            message = await _handle_qr_code(page, qr_code, target_dir)
+            logger.info("重新填充手机号...")
+            await phone_input.fill(login_phone)
+        except (TimeoutError, PlaywrightTimeoutError) as e:
+            logger.info(f'未检测到二次验证二维码，{e}')
 
         except Exception as e:
             logger.error(f"扫描二次验证二维码异常，错误：{e}")
