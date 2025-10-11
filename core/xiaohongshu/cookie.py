@@ -1,13 +1,15 @@
 import logging
 from playwright.async_api import async_playwright
 import os
-from utils.comm import init_browser, get_code_instance, update_account, delete_code_instance
+from utils.comm import init_browser, get_code_instance, update_account, delete_code_instance, save_qr
 import json
 import asyncio
+from pathlib import Path
+import shutil
 from utils.static import PlatFormType
 from utils.config import XIAOHONGSHU_HOME, XIAOHONGSHU_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
-from core.telegram.message import send_photo
+from core.telegram.message import send_photo, delete_message
 from core.users.exception import APException
 
 
@@ -30,18 +32,20 @@ async def generate_cookie(login_phone):
         logger.info(msg)
 
 
-async def _generate_qr(page):
+async def _generate_qr(page, locator="img.css-1lhmg90"):
     """
-    不再使用扫码二维码登录，无法获取手机号，无法自动登录刷新cookie
     :param page:
+    :param locator: 默认表示点击生成并扫描二维码登录；否则输入手机号时可能需要再次验证，必须扫描二维码
     :return:
     """
-    # 点击登录按钮
-    await page.locator("img.css-wemwzq").click()
+
+    if locator == "img.css-1lhmg90":
+        # 点击登录按钮
+        await page.locator("img.css-wemwzq").click()
 
     # 等待二维码加载
-    img = page.locator("img.css-1lhmg90")
-    await page.wait_for_selector("img.css-1lhmg90")
+    img = page.locator(locator)
+    await page.wait_for_selector(locator)
 
     # 获取二维码 src
     src = await img.get_attribute("src")
@@ -128,26 +132,65 @@ async def login_by_mobile(page, login_phone):
 
 
 async def login(page, login_phone):
-    await asyncio.sleep(1)
-    login_container = page.locator("div.login-box-container")
-    phone_input = login_container.get_by_placeholder("手机号")
-    await phone_input.fill(login_phone)
-    # 删除当前验证码
-    await delete_code_instance()
-    send_btn = login_container.get_by_text("发送验证码")
+    target_dir = Path(settings.BASE_DIR / "qr_img" / "xiaohongshu")
+    target_dir.mkdir(parents=True, exist_ok=True)
+    message = None
+    try:
+        login_container = page.locator("div.login-box-container")
+        phone_input = login_container.get_by_placeholder("手机号")
+        await phone_input.fill(login_phone)
 
-    await send_btn.click()
-    code_instance = await get_code_instance()
+        try:
+            qr_code = "img.qrcode-img"
+            if page.locator("img.qrcode-img").is_visible():
+                qr_code_locator = page.locator(qr_code)
+                await qr_code_locator.wait_for(state="visible", timeout=5000)
+                message = await _handle_qr_code(page, qr_code, target_dir)
+                logger.info("重新填充手机号...")
+                await phone_input.fill(login_phone)
 
-    sms_code_input = login_container.get_by_placeholder("验证码")
-    await sms_code_input.fill(code_instance.code)
-    await asyncio.sleep(1)
+        except Exception as e:
+            logger.error(f"扫描二次验证二维码异常，错误：{e}")
+            raise APException(f"扫描二次验证二维码异常，错误：{e}")
+        finally:
+            await asyncio.to_thread(shutil.rmtree, target_dir, ignore_errors=True)
+            if message is not None:
+                await delete_message(message)
 
-    # agree_privacy_ele = page.locator("xpath=//div[@class='agreements']//*[local-name()='svg']")
-    # await agree_privacy_ele.click()  # 点击同意隐私协议
+        # 删除当前验证码
+        await delete_code_instance()
+        send_btn = login_container.get_by_text("发送验证码")
 
-    submit_btn_ele = page.get_by_role("button", name="登 录")
-    await submit_btn_ele.click()
+        await send_btn.click()
+        code_instance = await get_code_instance()
+
+        sms_code_input = login_container.get_by_placeholder("验证码")
+        await sms_code_input.fill(code_instance.code)
+        await asyncio.sleep(1)
+
+        # agree_privacy_ele = page.locator("xpath=//div[@class='agreements']//*[local-name()='svg']")
+        # await agree_privacy_ele.click()  # 点击同意隐私协议
+
+        submit_btn_ele = page.get_by_role("button", name="登 录")
+        await submit_btn_ele.click()
+    except Exception as e:
+        raise APException(e)
+
+
+async def _handle_qr_code(page, qr_code, target_dir):
+    logger.info("检测到二次验证二维码，开始处理...")
+    qr_code_locator = page.locator(qr_code)
+    src = await _generate_qr(page, qr_code)
+    qr_img_path = await save_qr(src, target_dir, 'xiaohongshu')
+    message = await send_photo(
+        qr_img_path,
+        caption='需要二次验证，请扫描二维码登陆小红书！<i>这条消息会在1分钟后删除~</i>'
+    )
+
+    # 等待二维码消失，表示用户已扫描
+    await qr_code_locator.wait_for(state="hidden", timeout=60000)
+    logger.info("二次验证二维码已扫描。")
+    return message
 
 
 async def check_cookie(account):
