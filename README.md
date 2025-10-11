@@ -40,7 +40,7 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
 
 ### 📋 前置条件
 
-- linux 系统（配置 >= 2C2G）
+- linux 系统（配置 >= 2C6G）
 - Docker
 - Telegram Bot Token
 - 目标平台（如 YouTube、抖音、小红书）的 账号
@@ -95,6 +95,10 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    | REDIS_PORT                | Redis 端口号                   | 6379                 |
    | GENERIC_TIMEZONE          | 系统通用时区                      | Asia/Shanghai        |
    | TZ                        | 容器/系统时区环境变量                 | Asia/Shanghai        |
+   | VNC_PASSWORD              | vnc桌面登录密码                   | your_passwd          |
+   | VNC_PORT                  | 原始vnc端口                     | 5901                 |
+   | NO_VNC_PORT               | vnc web端口                   | 6901                 |
+   | SHM_SIZE                  | 共享内存                        | 4gb                  |
    
    </details>
 
@@ -114,7 +118,7 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
 
 ## 📚 使用示例
    ```bash
-   TBD
+   TODO
    ```
 
 ## 🤝 贡献

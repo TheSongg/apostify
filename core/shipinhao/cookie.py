@@ -10,6 +10,7 @@ from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO, SHIPINHAO_UPLOAD_P
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.message import send_photo, delete_message
 from core.users.exception import APException
+from django.conf import settings
 
 
 logger = logging.getLogger("shipinhao")

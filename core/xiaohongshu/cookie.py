@@ -11,6 +11,7 @@ from utils.config import XIAOHONGSHU_HOME, XIAOHONGSHU_UPLOAD_PAGE
 from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from core.telegram.message import send_photo, delete_message
 from core.users.exception import APException
+from django.conf import settings
 
 
 logger = logging.getLogger("xiaohongshu")
@@ -107,7 +108,6 @@ def query_user_info(cookie):
 
 
 async def login_by_mobile(page, login_phone):
-    await asyncio.sleep(1)
     try:
         await login(page, login_phone)
     except Exception as e:
@@ -166,7 +166,6 @@ async def login(page, login_phone):
 
         sms_code_input = login_container.get_by_placeholder("验证码")
         await sms_code_input.fill(code_instance.code)
-        await asyncio.sleep(1)
 
         # agree_privacy_ele = page.locator("xpath=//div[@class='agreements']//*[local-name()='svg']")
         # await agree_privacy_ele.click()  # 点击同意隐私协议
