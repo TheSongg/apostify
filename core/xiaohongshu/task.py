@@ -5,7 +5,7 @@ import logging
 from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
-from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
+from utils.comm import init_page, associated_account_and_video, update_account, close_browser_context
 from .cookie import get_cookie
 from core.users.exception import APException
 from utils.config import XIAOHONGSHU_UPLOAD_PAGE, XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE
@@ -21,7 +21,7 @@ def upload_videos(nickname, platform_type, file_path, title, tags, video_name):
 
 async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
-    browser, context, page = await init_browser(playwright, account.cookie)
+    browser, context, page = await init_page(playwright, account.cookie)
 
     await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
     await page.wait_for_url(XIAOHONGSHU_UPLOAD_PAGE)

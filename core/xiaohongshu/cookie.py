@@ -1,7 +1,7 @@
 import logging
 from playwright.async_api import async_playwright
 import os
-from utils.comm import init_browser, get_code_instance, update_account, delete_code_instance, save_qr
+from utils.comm import init_page, get_code_instance, update_account, delete_code_instance, save_qr
 import json
 import asyncio
 from pathlib import Path
@@ -18,19 +18,22 @@ logger = logging.getLogger("xiaohongshu")
 
 
 async def generate_cookie(login_phone):
-    async with async_playwright() as playwright:
-        browser, context, page = await init_browser(playwright)
+    page = None
+    try:
+        page = await init_page()
         await page.goto(XIAOHONGSHU_HOME)
         await login_by_mobile(page, login_phone)
         await _wait_for_login(page)
-
-        data = await get_cookie(context, login_phone)
-        await context.close()
-        await browser.close()
+        data = await get_cookie(page, login_phone)
         await update_account(data)
 
-        msg = f"{data['nickname']}小红书账号Cookie更新成功~"
+        msg = f"{login_phone}小红书账号Cookie更新成功~"
         logger.info(msg)
+    except Exception as e:
+        raise APException(e)
+    finally:
+        if page:
+            await page.close()
 
 
 async def _generate_qr(page, locator="img.css-1lhmg90"):
@@ -72,20 +75,17 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
         raise APException("登录超时！")
 
 
-async def get_cookie(context, login_phone):
-    cookie = await context.storage_state()
-    user_info = query_user_info(cookie)
+async def get_cookie(page, login_phone):
     data = {
         "platform_type": PlatFormType.xiaohongshu.value,
-        "account_id": user_info.get('redId', ''),
-        "nickname": user_info.get('userName', ''),
-        "password": user_info.get('password', ''),
+        "account_id": '',
+        "nickname": '',
+        "password": '',
         "phone": login_phone,
-        "email": user_info.get('email', ''),
-        "cookie": cookie,
+        "email": '',
+        "cookie": {},
         "is_expired": False
     }
-    logger.info(f"{data['nickname']} cookie保存成功~")
     return data
 
 
@@ -198,11 +198,11 @@ async def _handle_qr_code(page, qr_code, target_dir):
 async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
-            browser, context, page = await init_browser(playwright, account.cookie)
+            page = await init_page()
             await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
             await page.wait_for_selector("span:has-text('发布笔记')")
-            logger.info(f"{account.nickname} cookie未过期！")
+            logger.info(f"{account.phone} cookie未过期！")
 
     except Exception as e:
-        logger.error(f"{account.nickname} cookie过期！错误：{str(e)}")
+        logger.error(f"{account.phone} cookie过期！错误：{str(e)}")
         raise APException(e)

@@ -2,7 +2,7 @@ import logging
 from playwright.async_api import async_playwright
 import os
 import sys
-from utils.comm import (init_browser, update_account,
+from utils.comm import (init_page, update_account,
                         get_code_instance, delete_code_instance, get_tracks)
 import asyncio
 from utils.static import PlatFormType
@@ -19,7 +19,7 @@ logger = logging.getLogger("douyin")
 
 async def generate_cookie(login_phone):
     async with async_playwright() as playwright:
-        browser, context, page = await init_browser(playwright)
+        browser, context, page = await init_page(playwright)
         await page.goto(DOUYIN_HOME)
         await login_by_mobile(page, login_phone)
 
@@ -288,7 +288,7 @@ async def move_slider(page, back_selector: str, gap_selector: str, move_step: in
 async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
-            browser, context, page = await init_browser(playwright, account.cookie)
+            browser, context, page = await init_page(playwright, account.cookie)
             await page.goto(DOUYIN_UPLOAD_PAGE)
             data = await get_cookie(context, page, account.phone)
 

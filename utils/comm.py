@@ -11,6 +11,7 @@ from django.db import transaction
 import time
 from core.comm.models import Videos, Account, VerificationCode
 from core.users.exception import APException
+from utils.playwright import get_browser
 
 
 logger = logging.getLogger('app')
@@ -40,43 +41,34 @@ async def set_init_script(context):
 
 async def get_chrome_driver(playwright):
     """获取浏览器对象（支持本地或远程模式）"""
-    user_data_dir = "/app/pw-user-data"
     is_headless = os.getenv('HEADLESS') in ['True', True]
+    chrome_driver = f"ws://playwright:{os.getenv('PW_PORT')}"
+    launch_options = {
+        "headless": is_headless,
+        "args": ["--no-sandbox"]
+    }
 
-    logger.info(f"本地启动浏览器，持久化目录: {user_data_dir}, headless={is_headless}")
-    browser = await playwright.chromium.launch_persistent_context(
-        user_data_dir=user_data_dir,
-        headless=is_headless,
-        args=["--no-sandbox"]
-    )
-    return browser
+    connect_headers = {
+        "x-playwright-launch-options": json.dumps(launch_options)
+    }
 
-async def init_browser(playwright, cookie=None):
-    """异步启动浏览器并初始化页面"""
-    browser = await get_chrome_driver(playwright)
+    logger.info(f"正在连接到远程服务器:{chrome_driver}")
 
-    # 如果是持久化浏览器（launch_persistent_context），browser 本身就是 context
-    if hasattr(browser, "new_page"):
-        context = browser
-    else:
-        # 如果是通过 connect_over_cdp 连接的远程浏览器
-        # 通常 remote_browser.contexts[0] 为持久化上下文
-        if browser.contexts:
-            context = browser.contexts[0]
-        else:
-            # 没有上下文时创建新的（不推荐，除非远程无 persistent）
-            context = await browser.new_context()
+    return await playwright.chromium.connect(chrome_driver, headers=connect_headers)
 
+
+async def init_page():
+    # 获取浏览器实例
+    context = get_browser()
     context = await set_init_script(context)
+
+    # 创建新页面
     page = await context.new_page()
-    timeout = int(os.getenv('DEFAULT_TIMEOUT', '30000'))
-    page.set_default_timeout(timeout)
-    page.set_default_navigation_timeout(timeout)
+    page.set_default_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+    page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
 
-    if cookie:
-        await context.add_cookies(cookie)
+    return page
 
-    return browser, context, page
 
 def generate_new_context_args(cookie):
     args = {}

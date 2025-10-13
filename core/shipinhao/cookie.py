@@ -3,7 +3,7 @@ from playwright.async_api import async_playwright
 import os
 import shutil
 from pathlib import Path
-from utils.comm import init_browser, save_qr, update_account
+from utils.comm import init_page, save_qr, update_account
 import asyncio
 from utils.static import PlatFormType
 from utils.config import SHIPINHAO_HOME, SHIPINHAO_USER_INFO, SHIPINHAO_UPLOAD_PAGE
@@ -20,7 +20,7 @@ async def generate_cookie(login_phone):
     target_dir = Path(settings.BASE_DIR / "qr_img" / "shipinhao")
     try:
         async with async_playwright() as playwright:
-            browser, context, page = await init_browser(playwright)
+            browser, context, page = await init_page(playwright)
             await page.goto(SHIPINHAO_HOME)
             src = await _generate_qr(page)
             qr_img_path = await save_qr(src, target_dir, 'shipinhao')
@@ -139,7 +139,7 @@ async def handle_response(page, max_wait=int(os.getenv("COOKIE_MAX_WAIT", 180)))
 async def check_cookie(account):
     try:
         async with async_playwright() as playwright:
-            browser, context, page = await init_browser(playwright, account.cookie)
+            browser, context, page = await init_page(playwright, account.cookie)
             await page.goto(SHIPINHAO_UPLOAD_PAGE)
             await page.wait_for_selector("span:has-text('发表')")
             logger.info(f"{account.nickname}视频号cookie自动刷新成功！")

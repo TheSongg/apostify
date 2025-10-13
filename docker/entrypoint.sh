@@ -16,4 +16,4 @@ else
 fi
 
 echo "初始化完成，启动 Supervisor..."
-exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
+exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/pw_supervisord.conf

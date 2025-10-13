@@ -5,7 +5,7 @@ import logging
 from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
-from utils.comm import init_browser, associated_account_and_video, update_account, close_browser_context
+from utils.comm import init_page, associated_account_and_video, update_account, close_browser_context
 from .cookie import get_cookie
 from utils.config import (DOUYIN_UPLOAD_PAGE, DOUYIN_UPLOAD_SUCCESS_PAGE_1,
                           DOUYIN_UPLOAD_SUCCESS_PAGE_2, DOUYIN_MANAGE_PAGE)
@@ -48,7 +48,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
 
 async def _upload_for_account(playwright, account, file_path, title, tags):
     """为单个账号上传视频"""
-    browser, context, page = await init_browser(playwright, account.cookie)
+    browser, context, page = await init_page(playwright, account.cookie)
 
     await page.goto(DOUYIN_UPLOAD_PAGE)
     await page.wait_for_url(DOUYIN_UPLOAD_PAGE)
