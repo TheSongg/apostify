@@ -74,29 +74,30 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    <details>
       <summary>非必须修改的参数</summary>
 
-   | 参数名称                      | 说明                          | 默认值                  |
-   |---------------------------|-----------------------------|----------------------|
-   | N8N_PROTOCOL              | n8n 服务协议（必须 https）          | https                |
-   | N8N_ENDPOINT_WEBHOOK      | n8n Webhook 接口路径            | webhook              |
-   | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径          | webhook-test         |
-   | N8N_DEFAULT_LOCALE        | n8n 默认语言/区域                 | zh-CN                |
-   | HEADLESS                  | 浏览器是否无头模式                   | True                 |
-   | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔               | 12                   |
-   | COOKIE_PERIOD             | Cookie 自动刷新周期               | hours                |
-   | DEFAULT_TIMEOUT           | 页面加载超时时间（毫秒）                | 120000               |
-   | COOKIE_MAX_WAIT           | 等待用户扫码获取 Cookie 最大时间（秒）     | 180                  |
-   | MAX_RETRIES               | 上传重试次数                      | 3                    |
-   | APOSTITFY_PORT            | 后端服务端口                      | 8000                 |
-   | POSTGRES_DB               | PostgreSQL 默认数据库名称          | progres              |
-   | POSTGRES_POST             | PostgreSQL 端口号              | 5432                 |
-   | POSTGRES_APOSTIFY_DB      | Apostify 服务使用的数据库名称         | apostify             |
-   | POSTGRES_N8N_DB           | n8n 服务使用的数据库名称              | n8n                  |
-   | REDIS_PORT                | Redis 端口号                   | 6379                 |
-   | GENERIC_TIMEZONE          | 系统通用时区                      | Asia/Shanghai        |
-   | TZ                        | 容器/系统时区环境变量                 | Asia/Shanghai        |
-   | VNC_PORT                  | 原始vnc端口                     | 5901                 |
-   | NO_VNC_PORT               | vnc web端口                   | 6901                 |
-   | SHM_SIZE                  | 共享内存                        | 4gb                  |
+   | 参数名称                      | 说明                      | 默认值           |
+   |---------------------------|-------------------------|---------------|
+   | N8N_PROTOCOL              | n8n 服务协议（必须 https）      | https         |
+   | N8N_ENDPOINT_WEBHOOK      | n8n Webhook 接口路径        | webhook       |
+   | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径      | webhook-test  |
+   | N8N_DEFAULT_LOCALE        | n8n 默认语言/区域             | zh-CN         |
+   | HEADLESS                  | 浏览器是否无头模式               | True          |
+   | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔           | 12            |
+   | COOKIE_PERIOD             | Cookie 自动刷新周期           | hours         |
+   | DEFAULT_TIMEOUT           | 页面加载超时时间（毫秒）            | 120000        |
+   | COOKIE_MAX_WAIT           | 等待用户扫码获取 Cookie 最大时间（秒） | 180           |
+   | MAX_RETRIES               | 上传重试次数                  | 3             |
+   | APOSTITFY_PORT            | 后端服务端口                  | 8000          |
+   | POSTGRES_DB               | PostgreSQL 默认数据库名称      | progres       |
+   | POSTGRES_POST             | PostgreSQL 端口号          | 5432          |
+   | POSTGRES_APOSTIFY_DB      | Apostify 服务使用的数据库名称     | apostify      |
+   | POSTGRES_N8N_DB           | n8n 服务使用的数据库名称          | n8n           |
+   | REDIS_PORT                | Redis 端口号               | 6379          |
+   | GENERIC_TIMEZONE          | 系统通用时区                  | Asia/Shanghai |
+   | TZ                        | 容器/系统时区环境变量             | Asia/Shanghai |
+   | VNC_PORT                  | 原始vnc端口                 | 5901          |
+   | NO_VNC_PORT               | vnc web端口               | 6901          |
+   | SHM_SIZE                  | 共享内存                    | 4gb           |
+   | VNC_RESOLUTION            | vnc桌面分辨率                | 1280x800      |
    
    </details>
 

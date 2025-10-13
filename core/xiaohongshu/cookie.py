@@ -141,6 +141,8 @@ async def login(page, login_phone):
         await phone_input.fill(login_phone)
 
         try:
+            await page.wait_for_url("**/web-login**", timeout=10000)
+            await page.wait_for_load_state("networkidle")
             qr_code = "img.qrcode-img"
             qr_code_locator = page.locator(qr_code)
             await qr_code_locator.wait_for(state="visible", timeout=5000)
