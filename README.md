@@ -53,7 +53,7 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    cd apostify/docker/
    ```
 
-2. **配置环境变量**
+ **配置环境变量**
    修改 `apostify/docker/` 目录下 `.env` 文件里的以下配置。
    
    以下为必须**修改**的参数：  
@@ -69,6 +69,7 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    | POSTGRES_USER       | PostgreSQL 超级用户    | your_user          |
    | POSTGRES_PASSWORD   | PostgreSQL 超级用户密码  | your_passwd        |
    | REDIS_PASSWORD      | Redis 密码           | your_passwd        |
+   | VNC_PASSWORD        | vnc桌面登录密码，查看浏览器    | your_passwd        |
 
    <details>
       <summary>非必须修改的参数</summary>
@@ -79,8 +80,6 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    | N8N_ENDPOINT_WEBHOOK      | n8n Webhook 接口路径            | webhook              |
    | N8N_ENDPOINT_WEBHOOK_TEST | n8n Webhook 测试接口路径          | webhook-test         |
    | N8N_DEFAULT_LOCALE        | n8n 默认语言/区域                 | zh-CN                |
-   | PLAYWRIGHT_PORT           | Playwright 浏览器调试端口          | 9222                 |
-   | CHROME_DRIVER             | Playwright 浏览器 WebSocket 地址 | ws://playwright:9222 |
    | HEADLESS                  | 浏览器是否无头模式                   | True                 |
    | COOKIE_INTERVAL_TIME      | Cookie 自动刷新间隔               | 12                   |
    | COOKIE_PERIOD             | Cookie 自动刷新周期               | hours                |
@@ -95,7 +94,6 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    | REDIS_PORT                | Redis 端口号                   | 6379                 |
    | GENERIC_TIMEZONE          | 系统通用时区                      | Asia/Shanghai        |
    | TZ                        | 容器/系统时区环境变量                 | Asia/Shanghai        |
-   | VNC_PASSWORD              | vnc桌面登录密码                   | your_passwd          |
    | VNC_PORT                  | 原始vnc端口                     | 5901                 |
    | NO_VNC_PORT               | vnc web端口                   | 6901                 |
    | SHM_SIZE                  | 共享内存                        | 4gb                  |
@@ -111,7 +109,7 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    ```
 
 4. **检查**
-    一共7个容器，检查是否都启动成功：
+    一共4个容器，检查是否都启动成功：
    ```bash
    docker ps
    ```

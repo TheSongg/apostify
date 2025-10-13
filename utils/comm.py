@@ -80,9 +80,6 @@ async def init_browser(playwright, cookie=None):
 
 def generate_new_context_args(cookie):
     args = {}
-    if os.getenv('HEADLESS') in ['True', True]:
-        args['viewport'] = {"width": int(os.getenv('WIDTH')), "height": int(os.getenv('HEIGHT'))}
-
     if cookie is not None:
         args["storage_state"] = cookie
 
