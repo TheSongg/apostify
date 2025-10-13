@@ -4,6 +4,7 @@ volumes:
   redis_storage:
   videos_storage:
   qr_img_storage:
+  pw_storage:
 
 services:
   postgres:
@@ -57,21 +58,6 @@ services:
       postgres:
         condition: service_healthy
 
-  playwright:
-    build:
-      context: .
-      target: playwright-final
-    container_name: playwright
-    restart: always
-    ports:
-      - "${NO_VNC_PORT}:${NO_VNC_PORT}"
-      - "${VNC_PORT}:${VNC_PORT}"
-      - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}" 
-    environment:
-      - VNC_PASSWORD=${VNC_PASSWORD}
-      - PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT}
-    shm_size: ${SHM_SIZE}
-
   redis:
     image: redis:7
     container_name: redis
@@ -94,7 +80,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-      target: apostify-base
+      target: apostify
     depends_on:
       postgres:
         condition: service_healthy
@@ -104,9 +90,11 @@ services:
     volumes:
       - videos_storage:/app/videos
       - qr_img_storage:/app/qr_img
+      - pw_storage:/app/pw-user-data
     restart: always
     ports:
       - "${APOSTITFY_PORT}:${APOSTITFY_PORT}"
+      - "${NO_VNC_PORT}:${NO_VNC_PORT}"
     working_dir: /app
     environment:
       - DB_HOST=postgres
@@ -117,54 +105,5 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=${REDIS_PORT}
       - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: [ "/app/docker/apostify-back.sh"]
-
-  celery-worker:
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      apostify:
-        condition: service_started
-    image: apostify-image:latest
-    volumes:
-      - videos_storage:/app/videos
-      - qr_img_storage:/app/qr_img
-    container_name: celery-worker
-    working_dir: /app
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=${POSTGRES_POST}
-      - DB_NAME=${POSTGRES_APOSTIFY_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: celery -A core worker -l INFO --concurrency=8
-
-  celery-beat:
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      apostify:
-        condition: service_started
-    image: apostify-image:latest
-    volumes:
-      - videos_storage:/app/videos
-      - qr_img_storage:/app/qr_img
-    container_name: celery-beat
-    working_dir: /app
-    environment:
-      - DB_HOST=postgres
-      - DB_PORT=${POSTGRES_POST}
-      - DB_NAME=${POSTGRES_APOSTIFY_DB}
-      - DB_USER=${POSTGRES_USER}
-      - DB_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_HOST=redis
-      - REDIS_PORT=${REDIS_PORT}
-      - REDIS_PASSWORD=${REDIS_PASSWORD}
-    command: [ "/app/docker/celery-beat.sh"]
+      - VNC_PASSWORD=${VNC_PASSWORD}
+    shm_size: ${SHM_SIZE}

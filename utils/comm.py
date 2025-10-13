@@ -39,46 +39,42 @@ async def set_init_script(context):
     return context
 
 async def get_chrome_driver(playwright):
-    chrome_driver = os.getenv('CHROME_DRIVER')
+    """获取浏览器对象（支持本地或远程模式）"""
+    user_data_dir = "/app/pw-user-data"
+    is_headless = os.getenv('HEADLESS') in ['True', True]
 
-    if chrome_driver.startswith('ws://') or \
-        chrome_driver.startswith('http://'):
-        is_headless = os.getenv('HEADLESS') in ['True', True]
-        
-        launch_options = {
-            "headless": is_headless,
-            "args": ["--no-sandbox"] 
-        }
-        
-        connect_headers = {
-            "x-playwright-launch-options": json.dumps(launch_options)
-        }
-        
-        logger.info(f"正在连接到远程服务器，请求模式: headless={is_headless}...")
-        
-        return await playwright.chromium.connect(chrome_driver, headers=connect_headers)
-
-    # 本地启动浏览器
-    return await playwright.chromium.launch(
-        headless=True if os.getenv('HEADLESS') in ['True', True] else False,
-        executable_path=chrome_driver
+    logger.info(f"本地启动浏览器，持久化目录: {user_data_dir}, headless={is_headless}")
+    browser = await playwright.chromium.launch_persistent_context(
+        user_data_dir=user_data_dir,
+        headless=is_headless,
+        args=["--no-sandbox"]
     )
+    return browser
 
 async def init_browser(playwright, cookie=None):
-    """异步启动浏览器并初始化上下文"""
-    # 获取浏览器实例
+    """异步启动浏览器并初始化页面"""
     browser = await get_chrome_driver(playwright)
 
-    # 创建新上下文
-    args = generate_new_context_args(cookie=cookie)
+    # 如果是持久化浏览器（launch_persistent_context），browser 本身就是 context
+    if hasattr(browser, "new_page"):
+        context = browser
+    else:
+        # 如果是通过 connect_over_cdp 连接的远程浏览器
+        # 通常 remote_browser.contexts[0] 为持久化上下文
+        if browser.contexts:
+            context = browser.contexts[0]
+        else:
+            # 没有上下文时创建新的（不推荐，除非远程无 persistent）
+            context = await browser.new_context()
 
-    context = await browser.new_context(**args)
     context = await set_init_script(context)
-
-    # 创建新页面
     page = await context.new_page()
-    page.set_default_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
-    page.set_default_navigation_timeout(int(os.getenv('DEFAULT_TIMEOUT')))
+    timeout = int(os.getenv('DEFAULT_TIMEOUT', '30000'))
+    page.set_default_timeout(timeout)
+    page.set_default_navigation_timeout(timeout)
+
+    if cookie:
+        await context.add_cookies(cookie)
 
     return browser, context, page
 
