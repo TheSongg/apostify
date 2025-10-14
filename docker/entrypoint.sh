@@ -1,6 +1,14 @@
 #!/bin/bash
 set -e
 
+PW_DIR="/app/pw-user-data"
+
+# 删除 Playwright/Chromium 遗留锁文件
+find "$PW_DIR" -type f -name "LOCK" -delete || true
+find "$PW_DIR" -type f -name "SingletonLock" -delete || true
+
+echo "旧的 Chromium 锁文件已清理"
+
 VNC_RESOLUTION=${VNC_RESOLUTION:-1280x800}
 VNC_PORT=${VNC_PORT:-5901}
 NO_VNC_PORT=${NO_VNC_PORT:-6901}

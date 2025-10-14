@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy AS playwright
 ENV DEBIAN_FRONTEND=noninteractive \
     DISPLAY=:1 \
     VNC_PORT=${VNC_PORT:-5901} \
-    NO_VNC_PORT=${NO_VNC_PORT:-6080} \
+    NO_VNC_PORT=${NO_VNC_PORT:-6901} \
     VNC_RESOLUTION=${VNC_RESOLUTION:-1280x800} \
     VNC_PASS=${VNC_PASSWORD:-vncpass}
 
@@ -24,6 +24,8 @@ RUN apt-get update && \
         dbus-x11 \
         curl unzip wget gnupg ca-certificates git \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir playwright
 
 RUN playwright install --with-deps chromium
 

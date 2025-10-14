@@ -61,6 +61,7 @@ services:
   playwright:
     build:
       context: ..
+      dockerfile: docker/Dockerfile
       target: playwright
     container_name: playwright
     restart: always
@@ -73,6 +74,9 @@ services:
       - pw_storage:/app/pw-user-data
     environment:
       - VNC_PASSWORD=${VNC_PASSWORD}
+      - VNC_PORT=${VNC_PORT}
+      - NO_VNC_PORT=${NO_VNC_PORT}
+      - VNC_RESOLUTION=${VNC_RESOLUTION}
       - PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT}
 
   redis:
