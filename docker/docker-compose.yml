@@ -60,7 +60,7 @@ services:
 
   playwright:
     build:
-      context: .
+      context: ..
       target: playwright
     container_name: playwright
     restart: always
@@ -68,6 +68,7 @@ services:
       - "${NO_VNC_PORT}:${NO_VNC_PORT}"
       - "${VNC_PORT}:${VNC_PORT}"
       - "${PLAYWRIGHT_PORT}:${PLAYWRIGHT_PORT}"
+    working_dir: /app
     volumes:
       - pw_storage:/app/pw-user-data
     environment:

@@ -39,23 +39,6 @@ async def set_init_script(context):
     await context.add_init_script(path=str(stealth_js_path))
     return context
 
-async def get_chrome_driver(playwright):
-    """获取浏览器对象（支持本地或远程模式）"""
-    is_headless = os.getenv('HEADLESS') in ['True', True]
-    chrome_driver = f"ws://playwright:{os.getenv('PW_PORT')}"
-    launch_options = {
-        "headless": is_headless,
-        "args": ["--no-sandbox"]
-    }
-
-    connect_headers = {
-        "x-playwright-launch-options": json.dumps(launch_options)
-    }
-
-    logger.info(f"正在连接到远程服务器:{chrome_driver}")
-
-    return await playwright.chromium.connect(chrome_driver, headers=connect_headers)
-
 
 async def init_page():
     # 获取浏览器实例

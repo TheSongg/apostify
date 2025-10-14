@@ -9,6 +9,8 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 EXPOSE ${NO_VNC_PORT} ${VNC_PORT}
 
+WORKDIR /app
+
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         xfce4 \
@@ -25,12 +27,12 @@ RUN apt-get update && \
 
 RUN playwright install --with-deps chromium
 
-COPY entrypoint.sh /entrypoint.sh
-COPY ../utils/start_browser.py /start_browser.py
-COPY pw_supervisord.conf /etc/supervisor/conf.d/pw_supervisord.conf
-RUN chmod +x /entrypoint.sh
+COPY docker/entrypoint.sh /app/entrypoint.sh
+COPY utils/start_browser.py /app/start_browser.py
+COPY docker/pw_supervisord.conf /etc/supervisor/conf.d/pw_supervisord.conf
+RUN chmod +x /app/entrypoint.sh
 
-CMD ["/entrypoint.sh"]
+CMD ["/app/entrypoint.sh"]
 
 FROM mcr.microsoft.com/playwright/python:v1.45.0-jammy AS apostify
 
