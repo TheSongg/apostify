@@ -96,7 +96,6 @@ Apostify 是一个基于 Python 的自动化内容发布平台，专为视频、
    | TZ                        | 容器/系统时区环境变量             | Asia/Shanghai |
    | VNC_PORT                  | 原始vnc端口                 | 5901          |
    | NO_VNC_PORT               | vnc web端口               | 6901          |
-   | SHM_SIZE                  | 共享内存                    | 4gb           |
    | VNC_RESOLUTION            | vnc桌面分辨率                | 1280x800      |
    
    </details>

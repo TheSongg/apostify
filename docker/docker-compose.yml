@@ -73,7 +73,6 @@ services:
     environment:
       - VNC_PASSWORD=${VNC_PASSWORD}
       - PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT}
-    shm_size: ${SHM_SIZE}
 
   redis:
     image: redis:7

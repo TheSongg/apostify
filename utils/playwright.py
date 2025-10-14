@@ -4,7 +4,7 @@ from playwright.async_api import async_playwright
 
 _browser = None
 _playwright_instance = None
-_ws_url = f"ws://playwright:{os.getenv('PW_PORT')}"
+_ws_url = f"ws://playwright:{os.getenv('PLAYWRIGHT_PORT')}"
 
 async def _init_browser():
     global _browser, _playwright_instance
