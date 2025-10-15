@@ -24,7 +24,7 @@ async def generate_cookie(login_phone):
         await page.goto(XIAOHONGSHU_HOME)
         await login_by_mobile(page, login_phone)
         await _wait_for_login(page)
-        data = await get_cookie(page, login_phone)
+        data = await get_cookie(login_phone)
         await update_account(data)
 
         msg = f"{login_phone}小红书账号Cookie更新成功~"
@@ -75,7 +75,8 @@ async def _wait_for_login(page, max_wait=int(os.getenv('COOKIE_MAX_WAIT', 180)))
         raise APException("登录超时！")
 
 
-async def get_cookie(page, login_phone):
+async def get_cookie(login_phone):
+    #  不再获取昵称等信息，太麻烦且没必要
     data = {
         "platform_type": PlatFormType.xiaohongshu.value,
         "account_id": '',
@@ -197,11 +198,10 @@ async def _handle_qr_code(page, qr_code, target_dir):
 
 async def check_cookie(account):
     try:
-        async with async_playwright() as playwright:
-            page = await init_page()
-            await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
-            await page.wait_for_selector("span:has-text('发布笔记')")
-            logger.info(f"{account.phone} cookie未过期！")
+        page = await init_page()
+        await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
+        await page.wait_for_selector("span:has-text('发布笔记')")
+        logger.info(f"{account.phone} cookie未过期！")
 
     except Exception as e:
         logger.error(f"{account.phone} cookie过期！错误：{str(e)}")

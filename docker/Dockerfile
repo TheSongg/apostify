@@ -59,8 +59,5 @@ COPY . /app
 COPY docker/*.sh /app/docker
 RUN chmod +x /app/docker/*.sh
 
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
-
 # 默认启动命令
 CMD ["bash", "/app/docker/start.sh"]

@@ -1,53 +1,30 @@
 import asyncio
 import aiohttp
 import socket
+from pathlib import Path
 from playwright.async_api import async_playwright
 
-
 _browser = None
+_playwright_instance = None
 
 
-async def get_chrome_json_url(container_name="playwright", port=9222):
+
+async def get_browser_async():
     """
-    异步解析容器名获取 IP，并生成可访问 Chrome DevTools 的 URL
+    纯异步版本，供异步代码直接 await 使用
     """
-    try:
-        ip = await asyncio.to_thread(socket.gethostbyname, container_name)
-    except socket.gaierror:
-        raise Exception(f"无法解析容器名 {container_name}")
+    return await init_browser()
 
-    url = f"http://{ip}:{port}/json/version"
-    return url
-
-
-async def init_browser():
-    global _browser
-    if _browser:
-        return _browser
-
-    _http_url = await get_chrome_json_url()
-    async with aiohttp.ClientSession() as session:
-        async with session.get(_http_url) as resp:
-            data = await resp.json()
-            ws_url = data.get('webSocketDebuggerUrl', '')
-            if not ws_url:
-                raise Exception('***** ws_url error *****')
-
-    _playwright_instance = await async_playwright().start()
-    _browser = await _playwright_instance.chromium.connect_over_cdp(ws_url)
-    print(f"init_browser：connecting browser：{ws_url}")
-    return _browser
-
-def get_event_loop():
-    """获取同步环境的 asyncio loop"""
-    try:
-        return asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        return loop
 
 def get_browser():
-    """同步接口，返回全局 browser"""
-    loop = get_event_loop()
-    return loop.run_until_complete(init_browser())
+    """
+    同步版本：可在非 async 环境下使用。
+    若事件循环已在运行，则通过线程执行异步代码。
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        # 已经有 loop 运行，转到线程中执行异步调用
+        return asyncio.run_coroutine_threadsafe(init_browser(), loop).result()
+    except RuntimeError:
+        # 当前无正在运行的事件循环 -> 正常创建
+        return asyncio.run(init_browser())

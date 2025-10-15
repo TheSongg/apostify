@@ -5,13 +5,15 @@ import os
 import base64
 import json
 import logging
+import socket
+import aiohttp
 from core.comm.serializers import AccountSerializer
 import asyncio
 from django.db import transaction
 import time
 from core.comm.models import Videos, Account, VerificationCode
 from core.users.exception import APException
-from utils.playwright import init_browser
+from playwright.async_api import async_playwright
 
 
 logger = logging.getLogger('app')
@@ -40,9 +42,40 @@ async def set_init_script(context):
     return context
 
 
+async def get_chrome_json_url(container_name="playwright", port=9222):
+    """
+    异步解析容器名获取 IP，并生成可访问 Chrome DevTools 的 URL
+    """
+    ip = await asyncio.to_thread(socket.gethostbyname, container_name)
+    return f"http://{ip}:{port}/json/version"
+
+
+async def init_browser():
+    """
+    初始化连接到远程 Chrome（Playwright CDP）
+    """
+    _http_url = await get_chrome_json_url()
+
+    # 获取 ws_url
+    async with aiohttp.ClientSession() as session:
+        async with session.get(_http_url) as resp:
+            data = await resp.json()
+            ws_url = data.get("webSocketDebuggerUrl")
+            if not ws_url:
+                raise Exception("***** ws_url error *****")
+
+    # 启动 playwright 实例
+    _playwright_instance = await async_playwright().start()
+    _browser = await _playwright_instance.chromium.connect_over_cdp(ws_url)
+    print(f"Connected to browser: {ws_url}")
+
+    return _browser
+
+
 async def init_page():
     # 获取浏览器实例
-    context = await init_browser()
+    browser = await init_browser()
+    context = await browser.new_context()
     context = await set_init_script(context)
 
     # 创建新页面

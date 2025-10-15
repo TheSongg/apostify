@@ -4,7 +4,7 @@ XIAOHONGSHU_UPLOAD_PAGE= "https://creator.xiaohongshu.com/publish/publish?from=h
 #  发布视频页面
 XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE= "https://creator.xiaohongshu.com/publish/success?**"
 #  获取cookie
-XIAOHONGSHU_HOME= "https://creator.xiaohongshu.com/login?selfLogout=true"
+XIAOHONGSHU_HOME= "https://creator.xiaohongshu.com/login"
 
 
 #  抖音

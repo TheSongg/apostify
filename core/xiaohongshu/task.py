@@ -133,7 +133,7 @@ async def async_upload_task(nickname, platform_type, file_path, title, tags, vid
             # 更新数据库，仍然同步
             await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
-            data = await get_cookie(context, account.phone)
+            data = await get_cookie(account.phone)
             await update_account(data)
 
     except Exception as e:

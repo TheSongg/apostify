@@ -26,7 +26,7 @@ def pad_string(s, width):
 
 @sync_to_async
 def account_list_html_table():
-    headers = ["序号", "平台", "昵称", "cookie是否有效"]
+    headers = ["序号", "平台", "手机/邮箱", "状态"]
     account_list = []
     accounts = Account.objects.all()
     serializer = AccountSerializer(accounts, many=True)
@@ -34,8 +34,8 @@ def account_list_html_table():
         account_list.append(
             {
                 "platfrom": PLATFORM_TYPE_CHOICES[instance["platform_type"]]["zh"],
-                "nickname": instance["nickname"],
-                "is_expired": "是" if instance["is_expired"] else "否",
+                "phone_email": instance["phone"] if instance["phone"] else instance["email"],
+                "is_expired": "过期" if instance["is_expired"] else "可用"
             }
         )
 
@@ -70,13 +70,7 @@ def account_list_html_table():
 def account_list_inline_keyboard():
     keyboard = [
       [
-        InlineKeyboardButton("\u2795 新增账号", callback_data="add_account")
-      ],
-      [
-        InlineKeyboardButton("\u270F\uFE0F 更新账号", callback_data="update_account")
-      ],
-      [
-        InlineKeyboardButton("\U0001F504 刷新cookie", callback_data="refresh_cookie")
+        InlineKeyboardButton("\u2795 新增账号", callback_data="account_add")
       ],
       [
         InlineKeyboardButton("\U0001F50D 查看账号详情", callback_data="account_detail")
