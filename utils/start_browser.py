@@ -1,6 +1,5 @@
 import asyncio
 import os
-import shutil
 from pathlib import Path
 from playwright.async_api import async_playwright
 
@@ -10,47 +9,49 @@ USER_DATA_DIR = Path("/app/pw-user-data")
 
 async def clean_old_locks():
     """清理 Playwright / Chromium 遗留锁文件"""
-    if not USER_DATA_DIR.exists():
-        USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
-        print(f"创建 user_data_dir 目录：{USER_DATA_DIR}")
-        return
-
     deleted_files = []
-    for pattern in ["LOCK", "SingletonLock"]:
-        for file in USER_DATA_DIR.rglob(pattern):
+    lock_files = ["SingletonLock", "SingletonSocket", "SingletonCookie"]
+
+    for lock_file in lock_files:
+        file_path = USER_DATA_DIR / lock_file
+        if file_path.exists():
             try:
-                file.unlink()
-                deleted_files.append(file)
+                # 使用 asyncio.to_thread 在子线程中执行阻塞的文件操作
+                await asyncio.to_thread(file_path.unlink)
+                deleted_files.append(file_path)
+                print(f"删除锁文件: {file_path}")
             except Exception as e:
-                print(f"无法删除锁文件 {file}: {e}")
+                print(f"无法删除锁文件 {file_path}: {e}")
 
     if deleted_files:
-        print(f"已清理锁文件: {[f.name for f in deleted_files]}")
+        print(f"共删除 {len(deleted_files)} 个锁文件。")
     else:
-        print("无遗留锁文件")
+        print("没有发现需要删除的锁文件。")
 
 
 async def main():
-    debug_port = os.getenv("PLAYWRIGHT_PORT", "9222")
     await clean_old_locks()
 
     async with async_playwright() as p:
         context = await p.chromium.launch_persistent_context(
             user_data_dir=USER_DATA_DIR,
-            headless=False,
+            headless=os.getenv("HEADLESS", False),
             args=[
                 "--no-sandbox",
-                f"--remote-debugging-port={debug_port}",
-                "--remote-debugging-address=0.0.0.0",
+                "--disable-gpu",
+                "--disable-dev-shm-usage",  # 防止内存不够崩溃
+                "--remote-debugging-port=9221",
+                "--remote-debugging-address=0.0.0.0",  # 没有效果
+                "--remote-debugging-ip=0.0.0.0"  # 没有效果
             ],
         )
 
-        print(f"浏览器已启动，可通过 ws://playwright:{debug_port}连接")
+        print("浏览器已启动，访问 http://playwright:9222 获取ws url")
 
         while True:
             await asyncio.sleep(60)
 
 
 if __name__ == "__main__":
-    print(f"***即将启动浏览器***")
+    print("***即将启动浏览器***")
     asyncio.run(main())

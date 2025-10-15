@@ -72,12 +72,14 @@ services:
     working_dir: /app
     volumes:
       - pw_storage:/app/pw-user-data
+      - videos_storage:/app/videos
     environment:
       - VNC_PASSWORD=${VNC_PASSWORD}
       - VNC_PORT=${VNC_PORT}
       - NO_VNC_PORT=${NO_VNC_PORT}
       - VNC_RESOLUTION=${VNC_RESOLUTION}
       - PLAYWRIGHT_PORT=${PLAYWRIGHT_PORT}
+      - HEADLESS=${HEADLESS}
 
   redis:
     image: redis:7

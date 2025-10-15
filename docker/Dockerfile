@@ -13,6 +13,7 @@ WORKDIR /app
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        socat\
         xfce4 \
         xfce4-goodies \
         tigervnc-standalone-server \
@@ -31,8 +32,9 @@ RUN playwright install --with-deps chromium
 
 COPY docker/entrypoint.sh /app/entrypoint.sh
 COPY utils/start_browser.py /app/start_browser.py
+COPY docker/socat.sh /app/socat.sh
 COPY docker/pw_supervisord.conf /etc/supervisor/conf.d/pw_supervisord.conf
-RUN chmod +x /app/entrypoint.sh
+RUN chmod +x /app/*.sh
 
 CMD ["/app/entrypoint.sh"]
 

@@ -1,22 +1,27 @@
 import asyncio
-import os
-import logging
+import aiohttp
 from playwright.async_api import async_playwright
 
 
-logger = logging.getLogger("app")
 _browser = None
-_playwright_instance = None
-_ws_url = f"ws://playwright:{os.getenv('PLAYWRIGHT_PORT')}"
+_http_url = "http://playwright:9222/json/version"
+
 
 async def _init_browser():
-    global _browser, _playwright_instance
+    global _browser
     if _browser:
         return _browser
 
+    async with aiohttp.ClientSession() as session:
+        async with session.get(_http_url) as resp:
+            data = await resp.json()
+            ws_url = data.get('webSocketDebuggerUrl', '')
+            if not ws_url:
+                raise Exception('***** ws_url error *****')
+
     _playwright_instance = await async_playwright().start()
-    _browser = await _playwright_instance.chromium.connect_over_cdp(_ws_url)
-    logger.info(f"初始化：已连接到browser：{_ws_url}")
+    _browser = await _playwright_instance.chromium.connect_over_cdp(ws_url)
+    print(f"_init_browser：connecting browser：{ws_url}")
     return _browser
 
 def get_event_loop():
