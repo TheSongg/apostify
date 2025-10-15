@@ -5,8 +5,7 @@ import logging
 from core.comm.models import Account
 from playwright.async_api import async_playwright
 import asyncio
-from utils.comm import init_page, associated_account_and_video, update_account, close_browser_context
-from .cookie import get_cookie
+from utils.comm import init_page, associated_account_and_video
 from core.users.exception import APException
 from utils.config import XIAOHONGSHU_UPLOAD_PAGE, XIAOHONGSHU_VIDEO_SCHEDULED_RELEASE_PAGE
 
@@ -15,13 +14,13 @@ logger = logging.getLogger("xiaohongshu")
 
 
 @shared_task
-def upload_videos(nickname, platform_type, file_path, title, tags, video_name):
-    asyncio.run(async_upload_task(nickname, platform_type, file_path, title, tags, video_name))
+def upload_videos(platform_type, file_path, title, tags, video_name):
+    asyncio.run(async_upload_task(platform_type, file_path, title, tags, video_name))
 
 
-async def _upload_for_account(playwright, account, file_path, title, tags):
+async def _upload_for_account(file_path, title, tags):
     """为单个账号上传视频"""
-    browser, context, page = await init_page(playwright, account.cookie)
+    page = await init_page()
 
     await page.goto(XIAOHONGSHU_UPLOAD_PAGE)
     await page.wait_for_url(XIAOHONGSHU_UPLOAD_PAGE)
@@ -34,8 +33,6 @@ async def _upload_for_account(playwright, account, file_path, title, tags):
     await asyncio.sleep(0.5)
     await _release_video(page)
     await asyncio.sleep(0.5)
-
-    return browser, context
 
 
 async def _upload_video_file(page, file_path,
@@ -115,30 +112,23 @@ async def _release_video(page):
     )  # 如果自动跳转到作品页面，则代表发布成功
 
 
-async def async_upload_task(nickname, platform_type, file_path, title, tags, video_name):
-    text = f'[{nickname}]抖音账号发布成功！'
+async def async_upload_task(platform_type, file_path, title, tags, video_name):
+    text = '小红书账号发布成功！'
 
     account = await asyncio.to_thread(
         lambda: Account.objects.filter(
             platform_type=platform_type,
             is_available=True,
-            nickname=nickname
         ).first()
     )
     try:
-        async with async_playwright() as playwright:
+        await _upload_for_account(file_path, title, tags)
 
-            browser, context = await _upload_for_account(playwright, account, file_path, title, tags)
-
-            # 更新数据库，仍然同步
-            await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
-
-            data = await get_cookie(account.phone)
-            await update_account(data)
+        # 更新数据库，仍然同步
+        await asyncio.to_thread(lambda: associated_account_and_video(account, video_name))
 
     except Exception as e:
-        text = f'账号 {nickname} 上传失败，错误：{str(e)}'
+        text = f'小红书账号发布失败，错误：{str(e)}'
         raise APException(text)
     finally:
-        await close_browser_context(browser, context)
         await send_message(text)

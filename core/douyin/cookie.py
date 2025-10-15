@@ -2,8 +2,7 @@ import logging
 from playwright.async_api import async_playwright
 import os
 import sys
-from utils.comm import (init_page, update_account,
-                        get_code_instance, delete_code_instance, get_tracks)
+from utils.comm import init_page, update_account, get_code_instance, delete_code_instance, get_tracks
 import asyncio
 from utils.static import PlatFormType
 from utils.config import DOUYIN_HOME, DOUYIN_USER_INFO, DOUYIN_UPLOAD_PAGE
@@ -18,21 +17,22 @@ logger = logging.getLogger("douyin")
 
 
 async def generate_cookie(login_phone):
-    async with async_playwright() as playwright:
-        browser, context, page = await init_page(playwright)
+    page = None
+    try:
+        page = await init_page()
         await page.goto(DOUYIN_HOME)
         await login_by_mobile(page, login_phone)
-
         await _wait_for_login(page)
-
-        # 保存 cookie
-        data = await get_cookie(context, page, login_phone)
-
-        await context.close()
-        await browser.close()
+        data = await get_cookie(login_phone)
         await update_account(data)
-        msg = f"{data['nickname']}抖音账号Cookie更新成功~"
+
+        msg = f"{login_phone}抖音账号Cookie更新成功~"
         logger.info(msg)
+    except Exception as e:
+        raise APException(str(e))
+    finally:
+        if page:
+            await page.close()
 
 
 async def _generate_qr(page):
@@ -124,22 +124,17 @@ async def file_in_code(page, max_wait):
     await page.wait_for_selector("span:has-text('高清发布')", timeout=max_wait * 1000)
 
 
-async def get_cookie(context, page, login_phone):
-    """异存 cookie 到数据库"""
-    cookie = await context.storage_state()
-    res_data = await get_user_profile(page)
-    user_profile = res_data.get('user_profile', {})
+async def get_cookie(login_phone):
     data = {
         "platform_type": PlatFormType.douyin.value,
-        "account_id": user_profile.get('unique_id', ''),
-        "nickname": user_profile.get('nick_name', ''),
-        "password": user_profile.get('password', ''),
+        "account_id": '',
+        "nickname": '',
+        "password": '',
         "phone": login_phone,
-        "email": user_profile.get('email', ''),
-        "cookie": cookie,
+        "email": '',
+        "cookie": {},
         "is_expired": False
     }
-    logger.info(f"{data['nickname']} cookie保存成功")
     return data
 
 
@@ -287,14 +282,11 @@ async def move_slider(page, back_selector: str, gap_selector: str, move_step: in
 
 async def check_cookie(account):
     try:
-        async with async_playwright() as playwright:
-            browser, context, page = await init_page(playwright, account.cookie)
-            await page.goto(DOUYIN_UPLOAD_PAGE)
-            data = await get_cookie(context, page, account.phone)
+        page = await init_page()
+        await page.goto(DOUYIN_UPLOAD_PAGE)
+        await page.wait_for_selector("span:has-text('高清发布')")
+        logger.info(f"{account.nickname}抖音cookie自动刷新成功！")
 
-            await context.close()
-            await browser.close()
-            await update_account(data)
-            logger.info(f"{account.nickname}抖音cookie自动刷新成功！")
     except Exception as e:
+        logger.error(f"{account.phone} cookie过期！错误：{str(e)}")
         raise APException(f"{account.nickname}抖音cookie更新失败，错误：{e}")

@@ -33,7 +33,7 @@ async def main():
     await clean_old_locks()
 
     async with async_playwright() as p:
-        context = await p.chromium.launch_persistent_context(
+        browser = await p.chromium.launch_persistent_context(
             user_data_dir=USER_DATA_DIR,
             headless= True if os.getenv("HEADLESS", False) in [True, 'True'] else False,
             args=[

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from core.comm.base_views import BaseViewSet
 from .task import generate_cookie
 from utils.static import PLATFORM_TYPE_CHOICES
-from core.comm.models import VerificationCode
+from core.comm.models import VerificationCode, Account
 import re
 from core.users.exception import APException
 import logging
@@ -24,6 +24,13 @@ class CookieViewSet(BaseViewSet):
 
         if platform_type not in PLATFORM_TYPE_CHOICES:
             raise APException('平台类型错误！')
+
+        if Account.objects.filter(
+            platform_type=platform_type,
+            is_available=True,
+        ).exists():
+            raise APException('已存在同平台账号，当前版本一个平台只支持维护一个账号信息！')
+
         generate_cookie.delay(login_phone, platform_type)
         return Response("后台执行中~")
 

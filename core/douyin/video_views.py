@@ -26,10 +26,6 @@ class VideoViewSet(BaseViewSet):
         title = request.data.get("title", "")
         tags = request.data.get("tags", [])
         video_name = request.data.get("video_name")
-        nickname = request.data.get("nickname")
-
-        if not video_name:
-            raise APException('视频名称不能为空！')
 
         instance = self.queryset.filter(name=video_name).first()
         if not instance:
@@ -38,7 +34,6 @@ class VideoViewSet(BaseViewSet):
         account = Account.objects.filter(
             platform_type=self.platform_type,
             is_available=True,
-            nickname=nickname
         )
         if not account.exists():
             raise APException('该抖音账号不可用，请先添加账号并生成Cookie！')
@@ -48,5 +43,5 @@ class VideoViewSet(BaseViewSet):
         ).strftime("%Y-%m")
         file_path = os.path.join(settings.BASE_DIR, "videos", month_dir_str, video_name)
 
-        upload_videos.delay(nickname, self.platform_type, file_path, title, tags, video_name)
+        upload_videos.delay(self.platform_type, file_path, title, tags, video_name)
         return Response('后台上传中，稍后请注意查看上传结果！')
