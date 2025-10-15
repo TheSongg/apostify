@@ -20,7 +20,7 @@ async def get_chrome_json_url(container_name="playwright", port=9222):
     return url
 
 
-async def _init_browser():
+async def init_browser():
     global _browser
     if _browser:
         return _browser
@@ -35,7 +35,7 @@ async def _init_browser():
 
     _playwright_instance = await async_playwright().start()
     _browser = await _playwright_instance.chromium.connect_over_cdp(ws_url)
-    print(f"_init_browser：connecting browser：{ws_url}")
+    print(f"init_browser：connecting browser：{ws_url}")
     return _browser
 
 def get_event_loop():
@@ -50,4 +50,4 @@ def get_event_loop():
 def get_browser():
     """同步接口，返回全局 browser"""
     loop = get_event_loop()
-    return loop.run_until_complete(_init_browser())
+    return loop.run_until_complete(init_browser())

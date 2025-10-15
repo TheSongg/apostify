@@ -11,7 +11,7 @@ from django.db import transaction
 import time
 from core.comm.models import Videos, Account, VerificationCode
 from core.users.exception import APException
-from utils.playwright import get_browser
+from utils.playwright import init_browser
 
 
 logger = logging.getLogger('app')
@@ -42,7 +42,7 @@ async def set_init_script(context):
 
 async def init_page():
     # 获取浏览器实例
-    context = await get_browser()
+    context = await init_browser()
     context = await set_init_script(context)
 
     # 创建新页面
