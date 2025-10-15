@@ -30,7 +30,7 @@ async def generate_cookie(login_phone):
         msg = f"{login_phone}小红书账号Cookie更新成功~"
         logger.info(msg)
     except Exception as e:
-        raise APException(e)
+        raise APException(str(e))
     finally:
         if page:
             await page.close()

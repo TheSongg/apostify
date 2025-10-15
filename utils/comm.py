@@ -42,7 +42,7 @@ async def set_init_script(context):
 
 async def init_page():
     # 获取浏览器实例
-    context = get_browser()
+    context = await get_browser()
     context = await set_init_script(context)
 
     # 创建新页面

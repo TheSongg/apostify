@@ -56,7 +56,7 @@ def refresh_cookies():
                             f"平台：[{platform['zh']}]，手机号：[{account.phone}] 自动刷新 cookie 异常，错误：{e}"
                         )
             except Exception as e:
-                error.append(f"导入 {platform['zh']} 模块失败: {e}")
+                error.append(f"导入 {platform['zh']} 模块失败: {str(e)}")
             finally:
                 await asyncio.sleep(5)
 
@@ -79,7 +79,7 @@ def generate_cookie(login_phone, platform_type):
             await generate_cookie_func(login_phone)
         except Exception as e:
             gen_cookie = False
-            msg = f"{login_phone}{platform['zh']}Cookie更新失败，错误：{e}"
+            msg = f"{login_phone}{platform['zh']}Cookie更新失败，错误：{str(e)}"
             logger.error(msg)
         finally:
             msg_bot = await send_message(msg)
