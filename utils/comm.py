@@ -75,7 +75,14 @@ async def init_browser():
 async def init_page():
     # 获取浏览器实例
     browser = await init_browser()
-    context = await browser.new_context()
+    # 列出当前浏览器里的所有上下文
+    contexts = browser.contexts
+    if contexts:
+        context = contexts[0]  # 复用已有的持久化 context
+    else:
+        # 若没有，说明浏览器启动时没指定 --user-data-dir
+        context = await browser.new_context()
+
     context = await set_init_script(context)
 
     # 创建新页面
