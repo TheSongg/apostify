@@ -25,10 +25,11 @@ class CookieViewSet(BaseViewSet):
         if platform_type not in PLATFORM_TYPE_CHOICES:
             raise APException('平台类型错误！')
 
-        if Account.objects.filter(
+        instance = Account.objects.filter(
             platform_type=platform_type,
             is_available=True,
-        ).exists():
+        )
+        if instance.exists() and instance.first().phone != login_phone:
             raise APException('已存在同平台账号，当前版本一个平台只支持维护一个账号信息！')
 
         generate_cookie.delay(login_phone, platform_type)

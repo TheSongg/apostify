@@ -12,7 +12,18 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import sys
 from pathlib import Path
 import os
+import io
+import os
 from dotenv import load_dotenv
+
+
+if sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
+os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["LANG"] = "en_US.UTF-8"
+os.environ["LC_ALL"] = "en_US.UTF-8"
 
 load_dotenv(os.path.join(os.getcwd(), 'docker', '.env'))
 

@@ -5,6 +5,7 @@ videos/*
 static
 *.pyc
 .venv
+.env
 .coverage
 .cache
 .\#*
