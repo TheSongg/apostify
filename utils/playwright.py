@@ -1,10 +1,23 @@
 import asyncio
 import aiohttp
+import socket
 from playwright.async_api import async_playwright
 
 
 _browser = None
-_http_url = "http://playwright:9222/json/version"
+
+
+async def get_chrome_json_url(container_name="playwright", port=9222):
+    """
+    异步解析容器名获取 IP，并生成可访问 Chrome DevTools 的 URL
+    """
+    try:
+        ip = await asyncio.to_thread(socket.gethostbyname, container_name)
+    except socket.gaierror:
+        raise Exception(f"无法解析容器名 {container_name}")
+
+    url = f"http://{ip}:{port}/json/version"
+    return url
 
 
 async def _init_browser():
@@ -12,6 +25,7 @@ async def _init_browser():
     if _browser:
         return _browser
 
+    _http_url = await get_chrome_json_url()
     async with aiohttp.ClientSession() as session:
         async with session.get(_http_url) as resp:
             data = await resp.json()

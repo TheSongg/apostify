@@ -35,7 +35,7 @@ async def main():
     async with async_playwright() as p:
         context = await p.chromium.launch_persistent_context(
             user_data_dir=USER_DATA_DIR,
-            headless=os.getenv("HEADLESS", False),
+            headless= True if os.getenv("HEADLESS", False) in [True, 'True'] else False,
             args=[
                 "--no-sandbox",
                 "--disable-gpu",
@@ -43,6 +43,8 @@ async def main():
                 "--remote-debugging-port=9221",
                 "--remote-debugging-address=0.0.0.0",  # 没有效果
                 "--remote-debugging-ip=0.0.0.0"  # 没有效果
+                "--no-first-run",
+                "--no-default-browser-check",
             ],
         )
 
