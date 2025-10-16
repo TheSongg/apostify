@@ -46,6 +46,7 @@ async def main():
                 "--no-first-run",
                 "--no-default-browser-check",
             ],
+            viewport={"width": 1920, "height": 1080}
         )
 
         print("浏览器已启动，访问 http://playwright:9222 获取ws url")
