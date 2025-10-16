@@ -1,5 +1,4 @@
 import logging
-from playwright.async_api import async_playwright
 import os
 import sys
 from utils.comm import init_page, update_account, get_code_instance, delete_code_instance, get_tracks
@@ -21,8 +20,13 @@ async def generate_cookie(login_phone):
     try:
         page = await init_page()
         await page.goto(DOUYIN_HOME)
-        await login_by_mobile(page, login_phone)
-        await _wait_for_login(page)
+        await page.wait_for_load_state("networkidle")
+        try:
+            await page.wait_for_selector("span:has-text('高清发布')")
+            logger.info('检测到抖音平台已登录，无需登录！')
+        except:
+            await login_by_mobile(page, login_phone)
+            await _wait_for_login(page)
         data = await get_cookie(login_phone)
         await update_account(data)
 
